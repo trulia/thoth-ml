@@ -13,14 +13,23 @@
     </context:component-scan>
 
 
-    <!--<bean id="defaultTimeZone" class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">-->
-    <!--<property name="staticMethod" value="org.joda.time.DateTimeZone.setDefault"/>-->
-    <!--<property name="arguments">-->
-    <!--<bean class="org.joda.time.DateTimeZone" factory-method="forID">-->
-    <!--<constructor-arg value="America/Los_Angeles"/>-->
-    <!--</bean>-->
-    <!--</property>-->
-    <!--</bean>-->
+    <bean id="placeholderConfig"
+          class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+
+        <property name="locations">
+            <list>
+                <value>classpath:application.default.properties</value>
+                <!--<value>classpath:application.properties</value>-->
+            </list>
+        </property>
+    </bean>
+
+    <bean id="sampler" class="com.trulia.thoth.quartz.Scheduler" init-method="init">
+        <property name="samplingEnabled" value="${thoth.sampling.enabled}"/>
+        <property name="samplingDir" value="${thoth.sampling.dir}"/>
+        <property name="mergingDir" value="${thoth.merging.dir}"/>
+        <property name="serverDetails" value="${thoth.sampling.serverDetails}"/>
+    </bean>
 
     <!-- JMX -->
     <bean class="org.springframework.jmx.support.MBeanServerFactoryBean"/>
