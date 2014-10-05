@@ -1,7 +1,10 @@
 package com.trulia.thoth.quartz;
 
 import com.trulia.thoth.pojo.ServerDetail;
+import com.trulia.thoth.util.ThothServers;
 import org.apache.log4j.Logger;
+import org.apache.solr.client.solrj.SolrServerException;
+import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.SerializationConfig;
 import org.quartz.*;
@@ -50,29 +53,13 @@ public class ThothSampler implements Job {
       schedulerContext = context.getScheduler().getContext();
       mergeDirectory = (String)schedulerContext.get("mergingDir");
       samplingDirectory = (String)schedulerContext.get("samplingDir");
-      serverDetails = (String)schedulerContext.get("serverDetails");
-
-      serversDetail = new ArrayList<ServerDetail>();
-      for (String server: serverDetails.trim().split(";")){
-        String[] detail = server.trim().split(",");
-        serversDetail.add(
-            new ServerDetail(
-                detail[0],
-                detail[1],
-                detail[2],
-                detail[3]
-            )
-        );
-      }
+      HttpSolrServer thothIndex = new HttpSolrServer((String)schedulerContext.get("thothIndex"));
+      ThothServers thothServers = new ThothServers();
+      serversDetail = thothServers.getList(thothIndex);
 
       ExecutorService service = Executors.newFixedThreadPool(10);
       futureList = new ArrayList<Future>();
       CompletionService<String> ser = new ExecutorCompletionService<String>(service);
-
-
-
-
-
 
       File dir = new File(samplingDirectory);
       new File(mergeDirectory).mkdirs();
@@ -85,7 +72,8 @@ public class ThothSampler implements Job {
             Future<String> future = ser.submit(new SamplerWorker(
                 server,
                 samplingDirectory,
-                mapper));
+                mapper,
+                thothIndex));
             futureList.add(future);
           } catch (IOException e) {
             e.printStackTrace();
@@ -143,6 +131,8 @@ public class ThothSampler implements Job {
       }
 
     } catch (SchedulerException e) {
+      e.printStackTrace();
+    } catch (SolrServerException e) {
       e.printStackTrace();
     }
 

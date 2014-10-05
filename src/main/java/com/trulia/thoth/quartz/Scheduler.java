@@ -12,6 +12,7 @@ public class Scheduler {
   private String samplingDir;
   private String mergingDir;
   private String serverDetails;
+  private String thothIndex;
 
   public void init() throws SchedulerException {
     if (samplingEnabled){
@@ -32,7 +33,7 @@ public class Scheduler {
       scheduler.start();
       scheduler.getContext().put("samplingDir", samplingDir);
       scheduler.getContext().put("mergingDir", mergingDir);
-      scheduler.getContext().put("serverDetails",serverDetails);
+      scheduler.getContext().put("thothIndex",thothIndex);
       scheduler.scheduleJob(workerJob, workerTrigger);
     } else {
       System.out.println("Sampling disabled. Skipping.");
@@ -71,5 +72,13 @@ public class Scheduler {
 
   public String getServerDetails() {
     return serverDetails;
+  }
+
+  public void setThothIndex(String thothIndex) {
+    this.thothIndex = thothIndex;
+  }
+
+  public String getThothIndex() {
+    return thothIndex;
   }
 }

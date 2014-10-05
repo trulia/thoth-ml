@@ -28,7 +28,7 @@
         <property name="samplingEnabled" value="${thoth.sampling.enabled}"/>
         <property name="samplingDir" value="${thoth.sampling.dir}"/>
         <property name="mergingDir" value="${thoth.merging.dir}"/>
-        <property name="serverDetails" value="${thoth.sampling.serverDetails}"/>
+        <property name="thothIndex" value="${thoth.index.url}"/>
     </bean>
 
     <!-- JMX -->
