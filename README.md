@@ -5,6 +5,7 @@ Basic configuration
 --------------------
 
 Create a file called **application.properties** and add it to the classpath.
+
 Example of the content:
 
 ```
