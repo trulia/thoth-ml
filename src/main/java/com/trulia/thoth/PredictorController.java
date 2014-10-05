@@ -1,9 +1,5 @@
 package com.trulia.thoth;
 
-/**
- * User: dbraga - Date: 10/1/14
- */
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
