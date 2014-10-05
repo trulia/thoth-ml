@@ -2,11 +2,13 @@ package com.trulia.thoth;
 
 import com.trulia.thoth.pojo.QueryPojo;
 import com.trulia.thoth.pojo.QuerySamplingDetails;
+import com.trulia.thoth.util.Utils;
 import net.sf.javaml.core.Dataset;
 import net.sf.javaml.core.DefaultDataset;
 import net.sf.javaml.core.SparseInstance;
 import net.sf.javaml.tools.data.FileHandler;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -26,6 +28,8 @@ public class Model {
   static HashMap<String, Integer> attributeIndex = new HashMap<String, Integer>();
   static int attributeCount = 0;
   static final int slowQueryThreshold = 50;
+  @Value("${thoth.merging.dir}")
+  private String mergeDirectory;
 
   @PostConstruct
   public void init() {
@@ -96,7 +100,7 @@ public class Model {
   }
 
   public void generateDataSet() throws IOException {
-   BufferedReader br = new BufferedReader(new FileReader("/Users/dbraga/2014_07_29_merged"));
+   BufferedReader br = new BufferedReader(new FileReader(Utils.getThothSampledFileName(mergeDirectory)));
 
     // hostname_s, pool_s, source_s, params_s, qtime_i, hits_i, bitmask_s
     //bw.write("");

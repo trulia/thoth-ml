@@ -31,6 +31,8 @@
         <property name="thothIndex" value="${thoth.index.url}"/>
     </bean>
 
+
+
     <!-- JMX -->
     <bean class="org.springframework.jmx.support.MBeanServerFactoryBean"/>
 
