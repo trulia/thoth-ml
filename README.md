@@ -1,4 +1,4 @@
-|     ![Thoth](/https://github.com/dbraga/thoth-api/master/img/thoth-logo.png?raw=true)    |            Thoth Predictor|
+|     ![Thoth](https://github.com/dbraga/thoth-api/master/img/thoth-logo.png?raw=true)    |            Thoth Predictor|
 | ------------- |:-------------:|
 
 ===============
