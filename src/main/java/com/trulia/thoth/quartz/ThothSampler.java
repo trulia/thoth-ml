@@ -27,7 +27,6 @@ public class ThothSampler implements Job {
   private String mergeDirectory;
   private String samplingDirectory;
   private ObjectMapper mapper;
-  String serverDetails;
 
 
   public ArrayList<File> filesinDir(String directoryName){
