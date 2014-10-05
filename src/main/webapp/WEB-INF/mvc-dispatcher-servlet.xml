@@ -29,6 +29,7 @@
         <property name="samplingDir" value="${thoth.sampling.dir}"/>
         <property name="mergingDir" value="${thoth.merging.dir}"/>
         <property name="thothIndex" value="${thoth.index.url}"/>
+        <property name="schedule" value="${thoth.sampling.schedule}"/>
     </bean>
 
 

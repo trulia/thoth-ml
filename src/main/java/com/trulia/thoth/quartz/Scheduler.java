@@ -13,6 +13,7 @@ public class Scheduler {
   private String mergingDir;
   private String serverDetails;
   private String thothIndex;
+  private String schedule;
 
   public void init() throws SchedulerException {
     if (samplingEnabled){
@@ -25,7 +26,7 @@ public class Scheduler {
           .newTrigger()
           .withIdentity("samplerTrigger", "group1")
           .withSchedule(
-              CronScheduleBuilder.cronSchedule("0 * * * * ?"))
+              CronScheduleBuilder.cronSchedule(schedule))
           .build();
 
       //Schedule it
@@ -80,5 +81,13 @@ public class Scheduler {
 
   public String getThothIndex() {
     return thothIndex;
+  }
+
+  public void setSchedule(String schedule) {
+    this.schedule = schedule;
+  }
+
+  public String getSchedule() {
+    return schedule;
   }
 }
