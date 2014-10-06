@@ -33,6 +33,7 @@ import java.io.IOException;
     return new ResponseEntity<String>(model.getVersion(), HttpStatus.OK);
   }
   else if (TRAIN_MODEL_ACTION.equals(action)){
+    // TODO: collapse those two methods
     model.generateDataSet();
     return new ResponseEntity<String>(model.trainModel(), HttpStatus.OK);
   }
