@@ -1,11 +1,11 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.springapp</groupId>
-    <artifactId>thoth-predict</artifactId>
+    <groupId>com.trulia.thoth</groupId>
+    <artifactId>thoth-ml</artifactId>
     <packaging>war</packaging>
     <version>1.1-SNAPSHOT</version>
-    <name>thoth-predict</name>
+    <name>thoth-ml</name>
 
     <properties>
         <spring.version>3.2.0.RELEASE</spring.version>
@@ -102,7 +102,7 @@
     </dependencies>
 
     <build>
-        <finalName>thoth-predict</finalName>
+        <finalName>thoth-ml</finalName>
         <plugins>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
