@@ -1,5 +1,6 @@
 package com.trulia.thoth.quartz;
 
+import com.trulia.thoth.ModelHealth;
 import com.trulia.thoth.pojo.QuerySamplingDetails;
 import com.trulia.thoth.pojo.ServerDetail;
 import org.apache.solr.client.solrj.SolrQuery;
@@ -32,6 +33,8 @@ public class SamplerWorker implements Callable<String>{
   private ObjectMapper mapper;
   private String fileName;
 
+  private ModelHealth modelHealth;
+
   private String hostname;
   private String port;
   private String core;
@@ -60,7 +63,7 @@ public class SamplerWorker implements Callable<String>{
     return items.subList(0, m);
   }
 
-  public SamplerWorker(ServerDetail server, String samplingDirectory, ObjectMapper mapper, HttpSolrServer thothIndex) throws IOException {
+  public SamplerWorker(ServerDetail server, String samplingDirectory, ObjectMapper mapper, HttpSolrServer thothIndex, ModelHealth modelHealth) throws IOException {
     this.server = server;
     this.mapper = mapper;
     DateFormat dateFormat = new SimpleDateFormat("yyyy_MM_dd");
@@ -72,6 +75,7 @@ public class SamplerWorker implements Callable<String>{
     this.core = server.getCore();
     this.port = server.getPort();
     this.thothIndex = thothIndex;
+    this.modelHealth = modelHealth;
   }
 
   public String writeValueOrEmptyString(SolrDocument doc, String fieldName){
@@ -141,10 +145,15 @@ public class SamplerWorker implements Callable<String>{
 
   }
 
+  private void updateModelhealth(boolean isPredictionValid){
+    modelHealth.incrementCount();
+    modelHealth.computeScore(isPredictionValid == true ? 0:1);
+  }
+
 
   @Override
   public String call() throws Exception {
-    SolrQuery solrQuery = new SolrQuery("hostname_s:"+hostname+" AND port_i:"+port+" AND pool_s:"+pool+" AND coreName_s:"+core+" AND NOT exception_b:true" );
+    SolrQuery solrQuery = new SolrQuery("hostname_s:"+hostname+" AND port_i:"+port+" AND pool_s:"+pool+" AND coreName_s:"+core+" AND NOT exception_b:true AND NOT source_s:WatchingRequest" );
     solrQuery.setSort(new SolrQuery.SortClause("timestamp_dt", SolrQuery.ORDER.desc));
     solrQuery.setRows(100);  // Returning 100 docs
     QueryResponse qr = thothIndex.query(solrQuery);
@@ -158,8 +167,9 @@ public class SamplerWorker implements Callable<String>{
     }
 
 
-    List<SolrDocument> sample = randomSample(solrDocumentList, 10); //Sampling 10
+    List<SolrDocument> sample = randomSample(solrDocumentList, 100); //Sampling 10
     for (SolrDocument doc: sample){
+      updateModelhealth((Boolean)doc.getFieldValue("isSlowQueryPredictionValid_b"));
       for (String fieldName: samplingFields){
 
         if ("params_s".equals(fieldName)){
@@ -183,7 +193,7 @@ public class SamplerWorker implements Callable<String>{
   public static void main(String[] args) throws IOException {
     String params = "q={!spatial circles=33.6942,-112.033,1}(asmtBuildingArea_i:[ 2000 TO * ] ) AND (latitude_f:[ 33.27584 TO 34.06266 ]) AND (longitude_f:[ -112.32953 TO -111.91321 ])&sort=lastSaleDate_s desc&ghl=9w0sn3wx9c7-9mzg4bbgesf&fq=propertyId_s:[* TO *]&fq=lastSaleDate_s:[\"2013-10-09\" TO *]&fq=lastSalePrice_i:[1 TO *]&version=2.2&start=15&rows=15&cachebust=NOVERSION&wt=json&slowpool=1";
     ObjectMapper om  = new ObjectMapper();
-    SamplerWorker samplerWorker = new SamplerWorker(new ServerDetail("","","",""),"", om, new HttpSolrServer("http://thoth:8983/solr/collection1"));
+    SamplerWorker samplerWorker = new SamplerWorker(new ServerDetail("","","",""),"", om, new HttpSolrServer("http://thoth:8983/solr/collection1"), null);
     System.out.println(samplerWorker.extractDetailsFromParams(params));
 
   }

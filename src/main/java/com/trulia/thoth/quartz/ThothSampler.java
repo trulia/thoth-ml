@@ -1,5 +1,6 @@
 package com.trulia.thoth.quartz;
 
+import com.trulia.thoth.ModelHealth;
 import com.trulia.thoth.pojo.ServerDetail;
 import com.trulia.thoth.util.ThothServers;
 import org.apache.log4j.Logger;
@@ -52,9 +53,14 @@ public class ThothSampler implements Job {
       schedulerContext = context.getScheduler().getContext();
       mergeDirectory = (String)schedulerContext.get("mergingDir");
       samplingDirectory = (String)schedulerContext.get("samplingDir");
+      ModelHealth modelHealth = (ModelHealth)schedulerContext.get("modelHealth");
       HttpSolrServer thothIndex = new HttpSolrServer((String)schedulerContext.get("thothIndex"));
       ThothServers thothServers = new ThothServers();
+
+      //TODO: fix
       serversDetail = thothServers.getList(thothIndex);
+      //serversDetail = new ArrayList<ServerDetail>();
+      //serversDetail.add(new ServerDetail("search22", "bot", "8050", "active"));
 
       ExecutorService service = Executors.newFixedThreadPool(10);
       futureList = new ArrayList<Future>();
@@ -72,7 +78,8 @@ public class ThothSampler implements Job {
                 server,
                 samplingDirectory,
                 mapper,
-                thothIndex));
+                thothIndex,
+                modelHealth));
             futureList.add(future);
           } catch (IOException e) {
             e.printStackTrace();

@@ -19,10 +19,12 @@
         <property name="locations">
             <list>
                 <value>classpath:application.default.properties</value>
-                <value>classpath:application.properties</value>
+                <!--<value>classpath:application.properties</value>-->
             </list>
         </property>
     </bean>
+
+    <bean id="modelHealth" class="com.trulia.thoth.ModelHealth"/>
 
     <bean id="sampler" class="com.trulia.thoth.quartz.Scheduler" init-method="init">
         <property name="samplingEnabled" value="${thoth.sampling.enabled}"/>
@@ -30,6 +32,7 @@
         <property name="mergingDir" value="${thoth.merging.dir}"/>
         <property name="thothIndex" value="${thoth.index.url}"/>
         <property name="schedule" value="${thoth.sampling.schedule}"/>
+        <property name="modelHealth" ref="modelHealth"/>
     </bean>
 
 

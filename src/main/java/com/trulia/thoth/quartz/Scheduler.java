@@ -1,5 +1,6 @@
 package com.trulia.thoth.quartz;
 
+import com.trulia.thoth.ModelHealth;
 import org.quartz.*;
 import org.quartz.impl.StdSchedulerFactory;
 
@@ -14,6 +15,7 @@ public class Scheduler {
   private String serverDetails;
   private String thothIndex;
   private String schedule;
+  private ModelHealth modelHealth;
 
   public void init() throws SchedulerException {
     if (samplingEnabled){
@@ -35,6 +37,7 @@ public class Scheduler {
       scheduler.getContext().put("samplingDir", samplingDir);
       scheduler.getContext().put("mergingDir", mergingDir);
       scheduler.getContext().put("thothIndex",thothIndex);
+      scheduler.getContext().put("modelHealth",modelHealth);
       scheduler.scheduleJob(workerJob, workerTrigger);
     } else {
       System.out.println("Sampling disabled. Skipping.");
@@ -89,5 +92,13 @@ public class Scheduler {
 
   public String getSchedule() {
     return schedule;
+  }
+
+  public void setModelHealth(ModelHealth modelHealth) {
+    this.modelHealth = modelHealth;
+  }
+
+  public ModelHealth getModelHealth() {
+    return modelHealth;
   }
 }
