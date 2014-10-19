@@ -1,4 +1,4 @@
-|     ![Thoth](/../master/img/thoth-logo.png?raw=true)    |            Thoth Predictor|
+|     ![Thoth](/../master/img/thoth-logo.png?raw=true)    |            Thoth ML|
 | ------------- |:-------------:|
 
 ===============
