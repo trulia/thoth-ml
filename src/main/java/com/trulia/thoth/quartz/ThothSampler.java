@@ -1,6 +1,6 @@
 package com.trulia.thoth.quartz;
 
-import com.trulia.thoth.ModelHealth;
+import com.trulia.thoth.predictor.ModelHealth;
 import com.trulia.thoth.pojo.ServerDetail;
 import com.trulia.thoth.util.ThothServers;
 import org.apache.log4j.Logger;

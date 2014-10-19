@@ -24,7 +24,7 @@
         </property>
     </bean>
 
-    <bean id="modelHealth" class="com.trulia.thoth.ModelHealth"/>
+    <bean id="modelHealth" class="com.trulia.thoth.predictor.ModelHealth"/>
 
     <bean id="sampler" class="com.trulia.thoth.quartz.Scheduler" init-method="init">
         <property name="samplingEnabled" value="${thoth.sampling.enabled}"/>

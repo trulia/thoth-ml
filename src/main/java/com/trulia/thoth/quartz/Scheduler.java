@@ -1,6 +1,6 @@
 package com.trulia.thoth.quartz;
 
-import com.trulia.thoth.ModelHealth;
+import com.trulia.thoth.predictor.ModelHealth;
 import org.quartz.*;
 import org.quartz.impl.StdSchedulerFactory;
 

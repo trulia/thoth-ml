@@ -1,6 +1,6 @@
 package com.trulia.thoth.quartz;
 
-import com.trulia.thoth.ModelHealth;
+import com.trulia.thoth.predictor.ModelHealth;
 import com.trulia.thoth.pojo.QuerySamplingDetails;
 import com.trulia.thoth.pojo.ServerDetail;
 import org.apache.solr.client.solrj.SolrQuery;
@@ -145,12 +145,6 @@ public class SamplerWorker implements Callable<String>{
 
   }
 
-  private void updateModelhealth(boolean isPredictionValid){
-    modelHealth.incrementCount();
-    modelHealth.computeScore(isPredictionValid == true ? 0:1);
-  }
-
-
   @Override
   public String call() throws Exception {
     SolrQuery solrQuery = new SolrQuery("hostname_s:"+hostname+" AND port_i:"+port+" AND pool_s:"+pool+" AND coreName_s:"+core+" AND NOT exception_b:true AND NOT source_s:WatchingRequest" );
@@ -169,7 +163,9 @@ public class SamplerWorker implements Callable<String>{
 
     List<SolrDocument> sample = randomSample(solrDocumentList, 100); //Sampling 10
     for (SolrDocument doc: sample){
-      updateModelhealth((Boolean)doc.getFieldValue("isSlowQueryPredictionValid_b"));
+      // Update the model health based on the accuracy of the current prediction
+      modelHealth.computeScore(((Boolean) doc.getFieldValue("isSlowQueryPredictionValid_b")) == true ? 0:1);
+
       for (String fieldName: samplingFields){
 
         if ("params_s".equals(fieldName)){
