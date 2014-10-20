@@ -32,6 +32,7 @@ import java.io.IOException;
   // Model health score
   private static final String GET_MODEL_HEALTH_SCORE = "getModelHealthScore";
   private static final String SET_INVALID_MODEL_HEALTH_SCORE = "setInvalidModelHealthScore";
+  private static final String RESET_MODEL_HEALTH_SCORE = "resetModelHealthScore";
 
   private static final String TRAIN_MODEL_ACTION = "trainModel";
   private static final String INVALIDATE_MODEL_VERSION = "-500";
@@ -63,6 +64,10 @@ import java.io.IOException;
   }
   else if (SET_INVALID_MODEL_HEALTH_SCORE.equals(action)){
     modelHealth.setHealthScore(Float.parseFloat(PREDICTOR_MODEL_HEALTH_INVALID_SCORE));
+    return new ResponseEntity<String>("OK", HttpStatus.OK);
+  }
+  else if (RESET_MODEL_HEALTH_SCORE.equals(action)){
+    modelHealth.setHealthScore(0.0f);
     return new ResponseEntity<String>("OK", HttpStatus.OK);
   }
    return  null;
