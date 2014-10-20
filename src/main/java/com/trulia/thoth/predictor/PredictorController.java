@@ -45,7 +45,13 @@ import java.io.IOException;
   }
   else if (TRAIN_MODEL_ACTION.equals(action)){
     // TODO: collapse those two methods
-    model.generateDataSet();
+    //model.generateDataSet();
+    System.out.println("Training model");
+    try {
+      Thread.sleep(5000);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
     return new ResponseEntity<String>(model.trainModel(), HttpStatus.OK);
   }
   else if (INVALIDATE_MODEL.equals(action)){
