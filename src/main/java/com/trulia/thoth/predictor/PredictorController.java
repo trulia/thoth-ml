@@ -53,6 +53,7 @@ import java.io.IOException;
     } catch (InterruptedException e) {
       e.printStackTrace();
     }
+    modelHealth.setHealthScore(0.0f);
     return new ResponseEntity<String>(model.trainModel(), HttpStatus.OK);
   }
   else if (INVALIDATE_MODEL.equals(action)){
