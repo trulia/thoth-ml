@@ -76,16 +76,25 @@ public class TopicModel {
     // Show top 5 words in topics with proportions for the first document
     for (int topic = 0; topic < numTopics; topic++) {
       Iterator<IDSorter> iterator = topicSortedWords.get(topic).iterator();
+      BufferedWriter bw = new BufferedWriter(new FileWriter("/Users/pmhatre/thoth-data/topic-modeling/tempTopic-" +
+        topic +
+        ".csv"));
+      bw.write("text,size,topic");
+      bw.newLine();
 
       out = new Formatter(new StringBuilder(), Locale.US);
       out.format("%d\t%.3f\t", topic, topicDistribution[topic]);
       int rank = 0;
-      while (iterator.hasNext() && rank < 5) {
+      while (iterator.hasNext() && rank < 100) {
         IDSorter idCountPair = iterator.next();
-        out.format("%s (%.0f) ", dataAlphabet.lookupObject(idCountPair.getID()), idCountPair.getWeight());
+//        out.format("%s (%.0f) ", dataAlphabet.lookupObject(idCountPair.getID()), idCountPair.getWeight());
+//        out.format("%s,%.0f,%d\n", dataAlphabet.lookupObject(idCountPair.getID()), idCountPair.getWeight(), topic);
+        bw.write(dataAlphabet.lookupObject(idCountPair.getID()) + "," + idCountPair.getWeight() + "," + topic);
+        bw.newLine();
         rank++;
       }
-      System.out.println(out);
+      bw.flush();
+//      System.out.println(out);
     }
 
     // Create a new instance with high probability of topic 0
