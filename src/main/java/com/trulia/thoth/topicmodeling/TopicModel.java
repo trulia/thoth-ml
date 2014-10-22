@@ -115,6 +115,34 @@ public class TopicModel {
     TopicInferencer inferencer = model.getInferencer();
     double[] testProbabilities = inferencer.getSampledDistribution(testing.get(0), 10, 1, 5);
     System.out.println("0\t" + testProbabilities[0]);
+
+    // Overall distributions
+    HashMap<Integer, Integer> topicToAssignedMap = new HashMap<Integer, Integer>();
+    System.out.println("We have " + instances.size() + " instances");
+    for(int i=0; i< instances.size(); i++) {
+      double[] probs = model.getTopicProbabilities(i);
+      double max = -1; int maxIndex = -1;
+      for(int j = 0; j < numTopics; j++) {
+        if(probs[j] > max) {
+          max = probs[j];
+          maxIndex = j;
+        }
+      }
+
+
+      // update the counts hashmap
+      int count = 0;
+      if(topicToAssignedMap.containsKey(maxIndex)) {
+        count = topicToAssignedMap.get(maxIndex);
+      }
+      count++;
+      topicToAssignedMap.put(maxIndex, count);
+    }
+
+    for(int key: topicToAssignedMap.keySet()) {
+      System.out.println(key + ": " + topicToAssignedMap.get(key));
+    }
+
   }
 
 }
