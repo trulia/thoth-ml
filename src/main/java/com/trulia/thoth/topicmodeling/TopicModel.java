@@ -16,22 +16,19 @@ import java.io.*;
 
 public class TopicModel {
 
-  public static void main(String[] args) throws Exception {
-
+  public void testTopicModeling() throws IOException {
     // Begin by importing documents from text to feature sequences
     ArrayList<Pipe> pipeList = new ArrayList<Pipe>();
 
     // Pipes: lowercase, tokenize, remove stopwords, map to features
     pipeList.add( new CharSequenceLowercase() );
     pipeList.add( new CharSequence2TokenSequence(Pattern.compile("\\p{L}[\\p{L}\\p{P}]+\\p{L}")) );
-    pipeList.add( new TokenSequenceRemoveStopwords(new File("/Users/pmhatre/Downloads/mallet-2.0.6/stoplists/en.txt"), "UTF-8", false, false, false) );
+//    pipeList.add( new TokenSequenceRemoveStopwords(new File("/stopwords.txt"), "UTF-8", false, false, false) );
     pipeList.add( new TokenSequence2FeatureSequence() );
 
     InstanceList instances = new InstanceList (new SerialPipes(pipeList));
 
-    Reader fileReader = new InputStreamReader(new FileInputStream(new File
-      ("/Users/pmhatre/thoth-data/exceptions-only")),
-      "UTF-8");
+    Reader fileReader = new InputStreamReader(this.getClass().getResourceAsStream("/exceptions-only"));
     instances.addThruPipe(new CsvIterator (fileReader, Pattern.compile("^(\\S*)[\\s,]*(\\S*)[\\s,]*(.*)$"),
       3, 2, 1)); // data, label, name fields
 
@@ -143,6 +140,11 @@ public class TopicModel {
       System.out.println(key + ": " + topicToAssignedMap.get(key));
     }
 
+  }
+
+  public static void main(String[] args) throws Exception {
+
+    new TopicModel().testTopicModeling();
   }
 
 }
