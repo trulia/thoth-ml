@@ -16,7 +16,7 @@ import java.io.*;
 
 public class TopicModel {
 
-  public void testTopicModeling() throws IOException {
+  public void testTopicModeling(int numTopics, int numIterations, int numKeywordsToOutput) throws IOException {
     // Begin by importing documents from text to feature sequences
     ArrayList<Pipe> pipeList = new ArrayList<Pipe>();
 
@@ -32,10 +32,9 @@ public class TopicModel {
     instances.addThruPipe(new CsvIterator (fileReader, Pattern.compile("^(\\S*)[\\s,]*(\\S*)[\\s,]*(.*)$"),
       3, 2, 1)); // data, label, name fields
 
-    // Create a model with 100 topics, alpha_t = 0.01, beta_w = 0.01
+    //  alpha_t = 0.01, beta_w = 0.01
     //  Note that the first parameter is passed as the sum over topics, while
     //  the second is the parameter for a single dimension of the Dirichlet prior.
-    int numTopics = 10;
     ParallelTopicModel model = new ParallelTopicModel(numTopics, 1.0, 0.01);
 
     model.addInstances(instances);
@@ -46,7 +45,7 @@ public class TopicModel {
 
     // Run the model for 50 iterations and stop (this is for testing only,
     //  for real applications, use 1000 to 2000 iterations)
-    model.setNumIterations(50);
+    model.setNumIterations(numIterations);
     model.estimate();
 
     // Show the words and topics in the first instance
@@ -73,7 +72,7 @@ public class TopicModel {
     // Show top 5 words in topics with proportions for the first document
     for (int topic = 0; topic < numTopics; topic++) {
       Iterator<IDSorter> iterator = topicSortedWords.get(topic).iterator();
-      BufferedWriter bw = new BufferedWriter(new FileWriter("/Users/pmhatre/thoth-data/topic-modeling/tempTopic-" +
+      BufferedWriter bw = new BufferedWriter(new FileWriter("/Users/pmhatre/thoth-data/topic-modeling/topic-" +
         topic +
         ".csv"));
       bw.write("text,size,topic");
@@ -82,7 +81,7 @@ public class TopicModel {
       out = new Formatter(new StringBuilder(), Locale.US);
       out.format("%d\t%.3f\t", topic, topicDistribution[topic]);
       int rank = 0;
-      while (iterator.hasNext() && rank < 100) {
+      while (iterator.hasNext() && rank < numKeywordsToOutput) {
         IDSorter idCountPair = iterator.next();
 //        out.format("%s (%.0f) ", dataAlphabet.lookupObject(idCountPair.getID()), idCountPair.getWeight());
 //        out.format("%s,%.0f,%d\n", dataAlphabet.lookupObject(idCountPair.getID()), idCountPair.getWeight(), topic);
@@ -115,6 +114,7 @@ public class TopicModel {
 
     // Overall distributions
     HashMap<Integer, Integer> topicToAssignedMap = new HashMap<Integer, Integer>();
+    System.out.println();
     System.out.println("We have " + instances.size() + " instances");
     for(int i=0; i< instances.size(); i++) {
       double[] probs = model.getTopicProbabilities(i);
@@ -144,7 +144,10 @@ public class TopicModel {
 
   public static void main(String[] args) throws Exception {
 
-    new TopicModel().testTopicModeling();
+    int numTopics = 10;
+    int numIterations = 100;
+    int numKeywordsToOutput = 50;
+    new TopicModel().testTopicModeling(numTopics, numIterations, numKeywordsToOutput);
   }
 
 }
