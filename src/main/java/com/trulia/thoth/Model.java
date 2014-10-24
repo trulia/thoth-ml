@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import java.io.*;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
 
@@ -26,9 +27,8 @@ public class Model {
   private static final Logger LOG = Logger.getLogger(Model.class);
   private String version;
   static ObjectMapper mapper = new ObjectMapper();
-  static HashMap<String, Integer> attributeIndex = new HashMap<String, Integer>();
-  static int attributeCount = 0;
   static final int slowQueryThreshold = 50;
+  Random random = new Random();
   @Value("${thoth.merging.dir}")
   private String mergeDirectory;
   @Value("${train.dataset.location}")
@@ -111,20 +111,20 @@ public class Model {
   public void generateDataSet() throws IOException {
    BufferedReader br = new BufferedReader(new FileReader(Utils.getThothSampledFileName(mergeDirectory)));
     // hostname_s, pool_s, source_s, params_s, qtime_i, hits_i, bitmask_s
-    Dataset dataset = new DefaultDataset();
     // Training and test datasets
-    Dataset train = new DefaultDataset();
-    Dataset test = new DefaultDataset();
+    ArrayList<Double[]> train = new ArrayList<Double[]>();
+    ArrayList<Double[]> test = new ArrayList<Double[]>();
+
     String line;
     while ((line=br.readLine()) != null) {
       String[] splitLine = line.split("\t");
       if (splitLine.length != 7) continue;
-      SparseInstance instance = createInstance(getQueryPojoFromSplitLine(splitLine));
+      Double[] instance = createInstance(getQueryPojoFromSplitLine(splitLine));
       if(instance == null)
         continue;
-      dataset.add(instance);
+
       // Separate into training and test
-      Random random = new Random();
+
       int next = random.nextInt(100);
       if (next >= 70) {
         test.add(instance);
@@ -133,23 +133,44 @@ public class Model {
         train.add(instance);
       }
     }
-    //Train and test datasets
-    FileHandler.exportDataset(train,
-        new File(exportedTrainDataset));
+
+    // Export train and test datasets
+    exportDataset(train, exportedTrainDataset);
+    exportDataset(test, exportedTestDataset);
     LOG.info("Training set size: " + train.size());
-    LOG.info("Classindex: " + train.classIndex(null));
-    FileHandler.exportDataset(test,
-        new File(exportedTestDataset));
     LOG.info("Test set size: " + test.size());
-    LOG.info("Classindex: " + test.classIndex(null));
+
+
   }
 
-  private static SparseInstance createInstance(QueryPojo queryPojo) throws IOException {
-    SparseInstance instance = new SparseInstance();
+  private void exportDataset(ArrayList<Double[]> dataset, String path) throws IOException {
+    if(dataset == null) {
+      LOG.info("Empty dataset. Nothing to export");
+      return;
+    }
+
+    BufferedWriter bw = new BufferedWriter(new FileWriter(path));
+    for(Double[] example: dataset) {
+      if(example.length != 10) {
+        // Perform this check?
+      }
+      StringBuffer sb = new StringBuffer();
+      for(Double value: example) {
+        sb.append(value + "\t");
+      }
+      bw.write(sb.toString().trim());
+      bw.newLine();
+    }
+    bw.flush();
+  }
+
+  private static Double[] createInstance(QueryPojo queryPojo) throws IOException {
+    ArrayList<Double> instance = new ArrayList<Double>();
+    int pos = 0;
     QuerySamplingDetails querySamplingDetails = mapper.readValue(queryPojo.getParams(), QuerySamplingDetails.class);
     QuerySamplingDetails.Details details = querySamplingDetails.getDetails();
     int start = details.getStart();
-    addDoubleField(instance, "start", start);
+    instance.add((double) start);
 
     String query = details.getQuery();
     if(query != null) {
@@ -159,66 +180,49 @@ public class Model {
       query = query.replace("+", "");
       String[] queryFields = query.split("AND|OR");
       // Number of fields as a separate field
-      addDoubleField(instance, "fieldCount", queryFields.length);
+      instance.add((double) queryFields.length);
     }
-    if(queryPojo.getQtime() == null) {}
+    if(queryPojo.getQtime() == null) {
+      // LOG missing qtime
+      return null;
+    }
     else {
       int qtime = Integer.parseInt(queryPojo.getQtime());
       // --------- for classification --------------
       if(qtime < slowQueryThreshold) {
-        instance.setClassValue(new Double(0));
+        instance.add(0.0);
       }
       else {
-        instance.setClassValue(new Double(1));
+        instance.add(1.0);
       }
     }
-    if(queryPojo.getHits() == null) {}
+    if(queryPojo.getHits() == null) {
+      // Log missing hits
+      // How critical is this? Can this ever be missing
+    }
     else {
       int hits = Integer.parseInt(queryPojo.getHits());
-      addDoubleField(instance, "hits", hits);
+      instance.add((double) hits);
     }
     addBitmaskBooleanFields(instance, queryPojo.getBitmask());
-    return instance;
+    return instance.toArray(new Double[instance.size()]);
   }
 
-  private static void addBitmaskBooleanFields(SparseInstance instance, String bitmask) {
+  private static void addBitmaskBooleanFields(ArrayList<Double> instance, String bitmask) {
     if(bitmask.length() != 7) {
       LOG.error("Invalid bitmask: " + bitmask);
       return;
     }
 
-    addDoubleField(instance, "containsRangeQuery", Integer.parseInt(String.valueOf(bitmask.charAt(0))));
-    addDoubleField(instance, "isFacetSearch", Integer.parseInt(String.valueOf(bitmask.charAt(1))));
-    addDoubleField(instance, "isPropertyLookup", Integer.parseInt(String.valueOf(bitmask.charAt(2))));
-    addDoubleField(instance, "isPropertyHashLookup", Integer.parseInt(String.valueOf(bitmask.charAt(3))));
-    addDoubleField(instance, "isCollapsingSearch", Integer.parseInt(String.valueOf(bitmask.charAt(4))));
-    addDoubleField(instance, "isGeospatialSearch", Integer.parseInt(String.valueOf(bitmask.charAt(5))));
-    addDoubleField(instance, "containsOpenHomes", Integer.parseInt(String.valueOf(bitmask.charAt(6))));
+    instance.add(Double.parseDouble(String.valueOf(bitmask.charAt(0))));
+    instance.add(Double.parseDouble(String.valueOf(bitmask.charAt(1))));
+    instance.add(Double.parseDouble(String.valueOf(bitmask.charAt(2))));
+    instance.add(Double.parseDouble(String.valueOf(bitmask.charAt(3))));
+    instance.add(Double.parseDouble(String.valueOf(bitmask.charAt(4))));
+    instance.add(Double.parseDouble(String.valueOf(bitmask.charAt(5))));
+    instance.add(Double.parseDouble(String.valueOf(bitmask.charAt(6))));
   }
 
-  private static void addDoubleField(SparseInstance instance, String attributeName, int attributeValue) {
-    if(attributeIndex.containsKey(attributeName)) {
-      int index = attributeIndex.get(attributeName);
-      instance.put(index, (double) attributeValue);
-    }
-    else {
-      int index = attributeCount;
-      attributeIndex.put(attributeName, attributeCount++);
-      instance.put(index, (double) attributeValue);
-    }
-  }
-
-  private static void addStringField(SparseInstance instance, String attribute) {
-    if(attributeIndex.containsKey(attribute)) {
-      int index = attributeIndex.get(attribute);
-      instance.put(index, (double) 1);
-    }
-    else {
-      int index = attributeCount;
-      attributeIndex.put(attribute, attributeCount++);
-      instance.put(index, (double) 1);
-    }
-  }
   private static QueryPojo getQueryPojoFromSplitLine(String[] fields){
     QueryPojo queryPojo = new QueryPojo();
     queryPojo.setParams(fields[3]);
