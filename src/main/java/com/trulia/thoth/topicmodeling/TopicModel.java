@@ -1,14 +1,14 @@
 package com.trulia.thoth.topicmodeling;
 
-import cc.mallet.util.*;
-import cc.mallet.types.*;
 import cc.mallet.pipe.*;
-import cc.mallet.pipe.iterator.*;
-import cc.mallet.topics.*;
+import cc.mallet.pipe.iterator.CsvIterator;
+import cc.mallet.topics.ParallelTopicModel;
+import cc.mallet.topics.TopicInferencer;
+import cc.mallet.types.*;
 
-import java.util.*;
-import java.util.regex.*;
 import java.io.*;
+import java.util.*;
+import java.util.regex.Pattern;
 
 /**
  * Taken from Mallet's java developer guide
@@ -72,7 +72,8 @@ public class TopicModel {
     // Show top 5 words in topics with proportions for the first document
     for (int topic = 0; topic < numTopics; topic++) {
       Iterator<IDSorter> iterator = topicSortedWords.get(topic).iterator();
-      BufferedWriter bw = new BufferedWriter(new FileWriter("/Users/pmhatre/thoth-data/topic-modeling/topic-" +
+      //TODO: parametrize this
+      BufferedWriter bw = new BufferedWriter(new FileWriter("target/topic-" +
         topic +
         ".csv"));
       bw.write("text,size,topic");
