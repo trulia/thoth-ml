@@ -33,12 +33,10 @@ public class Model {
   static final int slowQueryThreshold = 50;
   private static final Logger LOG = Logger.getLogger(Model.class);
   static ObjectMapper mapper = new ObjectMapper();
-  Random random = new Random();
+  private Random random = new Random();
   private String version;
   @Value("${thoth.merging.dir}")
   private String mergeDirectory;
-
-
   @Value("${train.dataset.location}")
   private String exportedTrainDataset;
   @Value("${test.dataset.location}")
@@ -144,34 +142,42 @@ public class Model {
   }
 
   /**
-   * Create a newly version using time since epoch and set it both on disk and in memory
-   * @return newly created version
+   * Set new version both on disk and in memory
    */
-  private String generateAndSetNewVersion(){
-    // Fetch new version
-    String newlyVersion = String.valueOf(System.currentTimeMillis());
+  private void setNewVersion(String version){
     // Write new version to disk
     File f = new File("version");
     PrintWriter pw = null;
     try {
       pw = new PrintWriter(f);
-      pw.write(newlyVersion);
+      pw.write(version);
       pw.close();
     } catch (FileNotFoundException e) {
       e.printStackTrace();
     }
     // Set new version in memory
-    this.version = newlyVersion;
-    return this.version;
+    this.version = version;
   }
+
+
+  /**
+   * Create a newly version using time since epoch
+   * @return new version
+   */
+  private String generateNewVersion(){
+    // Fetch new version
+    return String.valueOf(System.currentTimeMillis());
+  }
+
 
   /**
    * Train the model and return the newly model version
    * @return
    */
   public String trainModel() throws Exception {
-    trainAndStoreModel();
-    generateAndSetNewVersion();
+    String tempVersion = generateNewVersion();
+    trainAndStoreModel(tempVersion);
+    setNewVersion(tempVersion);
     return version;
   }
 
@@ -249,14 +255,14 @@ public class Model {
     bw.close();
   }
 
-
   /**
    * Boot the H2o cloud, train a new model and store it to disk
+   * @param modelVersion unique version for the new model
    * @throws Exception
    */
-  public void trainAndStoreModel() throws Exception {
+  public void trainAndStoreModel(String modelVersion) throws Exception {
         System.out.println("Initialization of the H2oCloud");
-        Boot.main(Model.class, new String[]{exportedTrainDataset, exportedTestDataset, modelLocation});
+        Boot.main(Model.class, new String[]{exportedTrainDataset, exportedTestDataset, modelLocation, modelVersion});
   }
 
   /**
@@ -296,7 +302,7 @@ public class Model {
     GBM.GBMModel model = UKV.get(gbm.dest());
 
     // Model serialization
-    File modelFile = new File(args[2]);
+    File modelFile = new File(args[2] + "/gbm_model_v" + args[3]);
     new Model2FileBinarySerializer().save(model, modelFile);
   }
 
