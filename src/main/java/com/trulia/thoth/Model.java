@@ -45,6 +45,7 @@ public class Model {
   private String modelLocation;
 
 
+
   private static Double[] createInstance(QueryPojo queryPojo) throws IOException {
     ArrayList<Double> instance = new ArrayList<Double>();
     int pos = 0;
@@ -310,6 +311,7 @@ public class Model {
 
   private abstract static class PrepData { abstract Vec prep(Frame fr); }
 
-
-
+  public String getModelLocation() {
+    return modelLocation;
+  }
 }

@@ -6,9 +6,16 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+
+import javax.servlet.http.HttpServletResponse;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * User: dbraga - Date: 10/1/14
@@ -64,6 +71,25 @@ import org.springframework.web.bind.annotation.RequestParam;
     return new ResponseEntity<String>("OK", HttpStatus.OK);
   }
    return  null;
+  }
+
+
+  @RequestMapping(value = "/models/{model_version}", method = RequestMethod.GET)
+  public void getFile(
+      @PathVariable("model_version") String version,
+      HttpServletResponse response) {
+      String fileName = model.getModelLocation() + "/gbm_model_v" + version;
+    try {
+      // get your file as InputStream
+      InputStream is = new FileInputStream(new File(fileName));
+      // copy it to response's OutputStream
+      org.apache.commons.io.IOUtils.copy(is, response.getOutputStream());
+      response.flushBuffer();
+    } catch (IOException ex) {
+      System.out.println(String.format("Error writing file to output stream. Filename was '{}'", fileName, ex));
+      throw new RuntimeException("IOError writing file to output stream");
+    }
+
   }
 
 }
