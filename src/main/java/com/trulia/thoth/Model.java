@@ -172,26 +172,24 @@ public class Model {
   }
 
   /**
-   * Generate data set and train model
+   * Generate datasets
    * @throws IOException
    */
   public void generateDataSet() throws IOException {
     // Get file that contains Thoth sample data
     BufferedReader br = new BufferedReader(new FileReader(Utils.getThothSampledFileName(mergeDirectory)));
-    // Training and test datasets
+    // Training and Test datasets
     ArrayList<Double[]> train = new ArrayList<Double[]>();
     ArrayList<Double[]> test = new ArrayList<Double[]>();
 
     String line;
     while ((line=br.readLine()) != null) {
       String[] splitLine = line.split("\t");
-      if (splitLine.length != 7) continue;
+      if (splitLine.length != 7) continue; //TODO: too specific, need to make it generic
       Double[] instance = createInstance(getQueryPojoFromSplitLine(splitLine));
-      if(instance == null)
-        continue;
+      if(instance == null) continue;
 
       // Separate into training and test
-
       int next = random.nextInt(100);
       if (next >= 70) {
         test.add(instance);
@@ -202,27 +200,28 @@ public class Model {
     }
 
     // Export train and test datasets
-    //exportedTrainDataset = "/tmp/trained";
-    //exportedTestDataset = "/tmp/tested";
-
-
     exportDataset(train, exportedTrainDataset);
     exportDataset(test, exportedTestDataset);
     LOG.info("Training set size: " + train.size());
     LOG.info("Test set size: " + test.size());
 
-
   }
 
+  /**
+   * Exports dataset to file
+   * @param dataset ArrayList of double arrays
+   * @param path of the file that needs to be stored
+   * @throws IOException
+   */
   private void exportDataset(ArrayList<Double[]> dataset, String path) throws IOException {
-    if(dataset == null) {
-      LOG.info("Empty dataset. Nothing to export");
+    if (dataset == null) {
+      LOG.warn("Empty dataset. Nothing to export. Skipping ...");
       return;
     }
 
     BufferedWriter bw = new BufferedWriter(new FileWriter(path));
-    for(Double[] example: dataset) {
-      if(example.length != 10) {
+    for (Double[] example: dataset) {
+      if (example.length != 10) { //TODO: too specific, need to make it generic
         // Perform this check?
       }
       StringBuffer sb = new StringBuffer();
@@ -233,6 +232,7 @@ public class Model {
       bw.newLine();
     }
     bw.flush();
+    bw.close();
   }
 
 
