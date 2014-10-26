@@ -10,8 +10,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import java.io.IOException;
-
 /**
  * User: dbraga - Date: 10/1/14
  */
@@ -38,23 +36,19 @@ import java.io.IOException;
   private static final String INVALIDATE_MODEL_VERSION = "-500";
 
   @RequestMapping(method = RequestMethod.GET, params = {"action"})
-  public ResponseEntity<String> getAction(@RequestParam(value = "action") String action) throws IOException {
+  public ResponseEntity<String> getAction(@RequestParam(value = "action") String action) throws Exception {
 
 
   if (RETRIEVE_VERSION.equals(action)){
     return new ResponseEntity<String>(model.getVersion(), HttpStatus.OK);
   }
   else if (TRAIN_MODEL_ACTION.equals(action)){
-    // TODO: collapse those two methods
-    //model.generateDataSet();
+    System.out.println("Generating dataset .. ");
+    model.generateDataSet();
     System.out.println("Training model");
-    try {
-      Thread.sleep(5000);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
+    model.trainModel();
     modelHealth.setHealthScore(0.0f);
-    return new ResponseEntity<String>(model.trainModel(), HttpStatus.OK);
+    return new ResponseEntity<String>("", HttpStatus.OK);
   }
   else if (INVALIDATE_MODEL.equals(action)){
     model.setVersion(INVALIDATE_MODEL_VERSION);
