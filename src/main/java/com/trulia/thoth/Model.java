@@ -175,6 +175,7 @@ public class Model {
    * @return
    */
   public String trainModel() throws Exception {
+    LOG.info("Training new model ...");
     String tempVersion = generateNewVersion();
     trainAndStoreModel(tempVersion);
     setNewVersion(tempVersion);
@@ -194,6 +195,7 @@ public class Model {
    * @throws IOException
    */
   public void generateDataSet() throws IOException {
+    LOG.info("Generating dataset ...");
     // Get file that contains Thoth sample data
     BufferedReader br = new BufferedReader(new FileReader(Utils.getThothSampledFileName(mergeDirectory)));
     // Training and Test datasets
@@ -261,7 +263,7 @@ public class Model {
    * @throws Exception
    */
   public void trainAndStoreModel(String modelVersion) throws Exception {
-        System.out.println("Initialization of the H2oCloud");
+        System.out.println("Initialization of the H2oCloud ...");
         Boot.main(Model.class, new String[]{exportedTrainDataset, exportedTestDataset, modelLocation, modelVersion});
   }
 
@@ -273,7 +275,7 @@ public class Model {
   public static void main(String[] args) throws IOException {
     H2O.main(new String[]{"-name", H2O_CLOUD_NAME, "-md5skip"});
     H2O.waitForCloudSize(1);
-    System.out.println("H2oCloud("+H2O_CLOUD_NAME+") initialized");
+    System.out.println("H2oCloud("+H2O_CLOUD_NAME+") initialized.");
 
     File trainedDataSetFile = new File(args[0]);
     Key fkey1 = NFSFileVec.make(trainedDataSetFile);

@@ -43,9 +43,7 @@ import org.springframework.web.bind.annotation.RequestParam;
     return new ResponseEntity<String>(model.getVersion(), HttpStatus.OK);
   }
   else if (TRAIN_MODEL_ACTION.equals(action)){
-    System.out.println("Generating dataset .. ");
     model.generateDataSet();
-    System.out.println("Training model");
     model.trainModel();
     modelHealth.setHealthScore(0.0f);
     return new ResponseEntity<String>("", HttpStatus.OK);
