@@ -283,6 +283,7 @@ public class Model {
     Key dest1 = Key.make("thoth-train.hex");
 
     //TODO: do we still need the test dataset?
+    //TODO: bring back old code
     File file2 = new File(args[1]);
     Key fkey2 = NFSFileVec.make(file2);
     Key dest2 = Key.make("thoth-test.hex");
