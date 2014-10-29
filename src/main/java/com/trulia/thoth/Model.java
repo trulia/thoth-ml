@@ -51,6 +51,22 @@ public class Model {
     int pos = 0;
     QuerySamplingDetails querySamplingDetails = mapper.readValue(queryPojo.getParams(), QuerySamplingDetails.class);
     QuerySamplingDetails.Details details = querySamplingDetails.getDetails();
+
+    if(queryPojo.getQtime() == null) {
+      // Handle this differently during prediction
+      return null;
+    }
+    else {
+      int qtime = Integer.parseInt(queryPojo.getQtime());
+      // --------- for classification --------------
+      if(qtime < slowQueryThreshold) {
+        instance.add(0.0);
+      }
+      else {
+        instance.add(1.0);
+      }
+    }
+
     int start = details.getStart();
     instance.add((double) start);
 
@@ -64,28 +80,15 @@ public class Model {
       // Number of fields as a separate field
       instance.add((double) queryFields.length);
     }
-    if(queryPojo.getQtime() == null) {
-      // LOG missing qtime
-      return null;
-    }
-    else {
-      int qtime = Integer.parseInt(queryPojo.getQtime());
-      // --------- for classification --------------
-      if(qtime < slowQueryThreshold) {
-        instance.add(0.0);
-      }
-      else {
-        instance.add(1.0);
-      }
-    }
-    if(queryPojo.getHits() == null) {
-      // Log missing hits
-      // How critical is this? Can this ever be missing
-    }
-    else {
-      int hits = Integer.parseInt(queryPojo.getHits());
-      instance.add((double) hits);
-    }
+
+//    if(queryPojo.getHits() == null) {
+//      // Log missing hits
+//      // How critical is this? Can this ever be missing
+//    }
+//    else {
+//      int hits = Integer.parseInt(queryPojo.getHits());
+//      instance.add((double) hits);
+//    }
     addBitmaskBooleanFields(instance, queryPojo.getBitmask());
     return instance.toArray(new Double[instance.size()]);
   }
