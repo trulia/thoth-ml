@@ -30,7 +30,7 @@ import java.util.Random;
 @Component
 public class Model {
   private static final String H2O_CLOUD_NAME = "predictorCloud";
-  static final int slowQueryThreshold = 50;
+  static final int slowQueryThreshold = 100;
   private static final Logger LOG = Logger.getLogger(Model.class);
   static ObjectMapper mapper = new ObjectMapper();
   private Random random = new Random();
