@@ -1,8 +1,9 @@
 package com.trulia.thoth.quartz;
 
-import com.trulia.thoth.predictor.ModelHealth;
 import com.trulia.thoth.pojo.QuerySamplingDetails;
 import com.trulia.thoth.pojo.ServerDetail;
+import com.trulia.thoth.predictor.ModelHealth;
+import com.trulia.thoth.predictor.StaticModelHealth;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.apache.solr.client.solrj.response.QueryResponse;
@@ -34,6 +35,8 @@ public class SamplerWorker implements Callable<String>{
   private String fileName;
 
   private ModelHealth modelHealth;
+  private StaticModelHealth staticModelHealth;
+
 
   private String hostname;
   private String port;
@@ -63,7 +66,7 @@ public class SamplerWorker implements Callable<String>{
     return items.subList(0, m);
   }
 
-  public SamplerWorker(ServerDetail server, String samplingDirectory, ObjectMapper mapper, HttpSolrServer thothIndex, ModelHealth modelHealth) throws IOException {
+  public SamplerWorker(ServerDetail server, String samplingDirectory, ObjectMapper mapper, HttpSolrServer thothIndex, ModelHealth modelHealth, StaticModelHealth staticModelHealth) throws IOException {
     this.server = server;
     this.mapper = mapper;
     DateFormat dateFormat = new SimpleDateFormat("yyyy_MM_dd");
@@ -76,6 +79,7 @@ public class SamplerWorker implements Callable<String>{
     this.port = server.getPort();
     this.thothIndex = thothIndex;
     this.modelHealth = modelHealth;
+    this.staticModelHealth = staticModelHealth;
   }
 
   public String writeValueOrEmptyString(SolrDocument doc, String fieldName){
@@ -160,11 +164,34 @@ public class SamplerWorker implements Callable<String>{
       return "skipped";
     }
 
-
-    List<SolrDocument> sample = randomSample(solrDocumentList, 100); //Sampling 10
+    List<SolrDocument> sample = randomSample(solrDocumentList, 100);
     for (SolrDocument doc: sample){
       // Update the model health based on the accuracy of the current prediction
       modelHealth.computeScore(((Boolean) doc.getFieldValue("isSlowQueryPredictionValid_b")) == true ? 0:1);
+
+      staticModelHealth.incrementSampleCount();
+
+      if ((Integer) doc.getFieldValue("qtime_i") > 100){
+        if ((Boolean) doc.getFieldValue("slowQuery_b") == true){
+          staticModelHealth.incrementTruePositive();
+        } else{
+          staticModelHealth.incrementFalseNegative();
+        }
+      } else {
+        if ((Boolean) doc.getFieldValue("slowQuery_b") == true){
+          staticModelHealth.incrementFalsePositive();
+        } else{
+          staticModelHealth.incrementTrueNegative();
+        }
+      }
+
+      if (((Boolean) doc.getFieldValue("isSlowQueryPredictionValid_b")) == false){
+        staticModelHealth.incrementPredictionErrors();
+      }
+
+      if (((Boolean) doc.getFieldValue("isSlowQueryPredictionValid_b")) == false){
+        staticModelHealth.incrementPredictionErrors();
+      }
 
       for (String fieldName: samplingFields){
 
@@ -189,7 +216,7 @@ public class SamplerWorker implements Callable<String>{
   public static void main(String[] args) throws IOException {
     String params = "q={!spatial circles=33.6942,-112.033,1}(asmtBuildingArea_i:[ 2000 TO * ] ) AND (latitude_f:[ 33.27584 TO 34.06266 ]) AND (longitude_f:[ -112.32953 TO -111.91321 ])&sort=lastSaleDate_s desc&ghl=9w0sn3wx9c7-9mzg4bbgesf&fq=propertyId_s:[* TO *]&fq=lastSaleDate_s:[\"2013-10-09\" TO *]&fq=lastSalePrice_i:[1 TO *]&version=2.2&start=15&rows=15&cachebust=NOVERSION&wt=json&slowpool=1";
     ObjectMapper om  = new ObjectMapper();
-    SamplerWorker samplerWorker = new SamplerWorker(new ServerDetail("","","",""),"", om, new HttpSolrServer("http://thoth:8983/solr/collection1"), null);
+    SamplerWorker samplerWorker = new SamplerWorker(new ServerDetail("","","",""),"", om, new HttpSolrServer("http://thoth:8983/solr/collection1"), null, null);
     System.out.println(samplerWorker.extractDetailsFromParams(params));
 
   }

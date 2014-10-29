@@ -13,8 +13,8 @@ public class CreateExceptionsOnlyDataset {
 
   public static void main(String[] args) throws IOException, ClassNotFoundException {
 
-    BufferedReader br = new BufferedReader(new FileReader("/Users/pmhatre/thoth-data/exceptions"));
-    BufferedWriter bw = new BufferedWriter(new FileWriter("/Users/pmhatre/thoth-data/exceptions-only"));
+    BufferedReader br = new BufferedReader(new FileReader("/tmp/exceptions"));
+    BufferedWriter bw = new BufferedWriter(new FileWriter("/tmp/exceptions-only"));
 
     String line;
     int id = 0;

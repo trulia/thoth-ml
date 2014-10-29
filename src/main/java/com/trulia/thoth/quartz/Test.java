@@ -3,6 +3,7 @@ package com.trulia.thoth.quartz;
 import com.trulia.thoth.pojo.QuerySamplingDetails;
 import com.trulia.thoth.pojo.ServerDetail;
 import com.trulia.thoth.util.ThothServers;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
@@ -16,7 +17,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -110,6 +113,9 @@ public class Test {
     ThothServers thothServers = new ThothServers();
 
     ArrayList<ServerDetail> serversDetail = thothServers.getList(thothIndex);
+    //ArrayList<ServerDetail> serversDetail = new ArrayList<ServerDetail>();
+
+    //serversDetail.add(new ServerDetail("search501","bot","8050","active"));
     for (ServerDetail server: serversDetail){
       String hostname = server.getName();
       String port = server.getPort();
@@ -174,9 +180,32 @@ public class Test {
 
   }
 
+  public static String cleanStackTrace(String stackTrace){
+    String output = stackTrace;
+    Set<String> cleaned = new HashSet<String>();
+
+    String[] splitted = output.split("\n");
+    for (String line: splitted){
+
+
+     if (line.contains("org.mortbay.jetty")) continue;
+     line = line.split("\\(")[0];
+      line = line.substring(line.lastIndexOf('.') + 1);
+     cleaned.add(line);
+
+
+    }
+
+    output = StringUtils.join(cleaned.toArray()," ");
+
+
+    return output.replaceAll("\t"," ").replaceAll("\n"," ");
+  }
+
+
   public static String writeValueOrEmptyString(SolrDocument doc, String fieldName){
     if (doc.containsKey(fieldName)) {
-      if (doc.containsKey("stackTrace_s")) return doc.getFieldValue(fieldName).toString().replaceAll("\t"," ").replaceAll("\n"," ");
+      if (doc.containsKey("stackTrace_s")) return cleanStackTrace(doc.getFieldValue(fieldName).toString());
       else return doc.getFieldValue(fieldName).toString();
 
     }

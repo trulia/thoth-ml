@@ -25,6 +25,7 @@
     </bean>
 
     <bean id="modelHealth" class="com.trulia.thoth.predictor.ModelHealth"/>
+    <bean id="staticModelHealth" class="com.trulia.thoth.predictor.StaticModelHealth"/>
 
     <bean id="sampler" class="com.trulia.thoth.quartz.Scheduler" init-method="init">
         <property name="samplingEnabled" value="${thoth.sampling.enabled}"/>
@@ -33,6 +34,7 @@
         <property name="thothIndex" value="${thoth.index.url}"/>
         <property name="schedule" value="${thoth.sampling.schedule}"/>
         <property name="modelHealth" ref="modelHealth"/>
+        <property name="staticModelHealth" ref="staticModelHealth"/>
     </bean>
 
 

@@ -1,7 +1,8 @@
 package com.trulia.thoth.quartz;
 
-import com.trulia.thoth.predictor.ModelHealth;
 import com.trulia.thoth.pojo.ServerDetail;
+import com.trulia.thoth.predictor.ModelHealth;
+import com.trulia.thoth.predictor.StaticModelHealth;
 import com.trulia.thoth.util.ThothServers;
 import org.apache.log4j.Logger;
 import org.apache.solr.client.solrj.SolrServerException;
@@ -54,6 +55,7 @@ public class ThothSampler implements Job {
       mergeDirectory = (String)schedulerContext.get("mergingDir");
       samplingDirectory = (String)schedulerContext.get("samplingDir");
       ModelHealth modelHealth = (ModelHealth)schedulerContext.get("modelHealth");
+      StaticModelHealth staticModelHealth = (StaticModelHealth)schedulerContext.get("staticModelHealth");
       HttpSolrServer thothIndex = new HttpSolrServer((String)schedulerContext.get("thothIndex"));
       ThothServers thothServers = new ThothServers();
 
@@ -79,7 +81,8 @@ public class ThothSampler implements Job {
                 samplingDirectory,
                 mapper,
                 thothIndex,
-                modelHealth));
+                modelHealth,
+                staticModelHealth));
             futureList.add(future);
           } catch (IOException e) {
             e.printStackTrace();

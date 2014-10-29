@@ -23,12 +23,15 @@ public class TopicModel {
     // Pipes: lowercase, tokenize, remove stopwords, map to features
     pipeList.add( new CharSequenceLowercase() );
     pipeList.add( new CharSequence2TokenSequence(Pattern.compile("\\p{L}[\\p{L}\\p{P}]+\\p{L}")) );
-//    pipeList.add( new TokenSequenceRemoveStopwords(new File("/stopwords.txt"), "UTF-8", false, false, false) );
+
+    pipeList.add( new TokenSequenceRemoveStopwords(    new File("/Users/dbraga/TRULIA_REPOS/git/thoth-ml/target/classes/stopwords.txt"), "UTF-8", false, false, false) );
     pipeList.add( new TokenSequence2FeatureSequence() );
 
     InstanceList instances = new InstanceList (new SerialPipes(pipeList));
 
-    Reader fileReader = new InputStreamReader(this.getClass().getResourceAsStream("/exceptions-only"));
+    //Reader fileReader = new InputStreamReader(this.getClass().getResourceAsStream("/exceptions-only"));
+    Reader fileReader = new InputStreamReader(new FileInputStream("/tmp/exceptions-only"));
+
     instances.addThruPipe(new CsvIterator (fileReader, Pattern.compile("^(\\S*)[\\s,]*(\\S*)[\\s,]*(.*)$"),
       3, 2, 1)); // data, label, name fields
 
@@ -73,7 +76,7 @@ public class TopicModel {
     for (int topic = 0; topic < numTopics; topic++) {
       Iterator<IDSorter> iterator = topicSortedWords.get(topic).iterator();
       //TODO: parametrize this
-      BufferedWriter bw = new BufferedWriter(new FileWriter("target/topic-" +
+      BufferedWriter bw = new BufferedWriter(new FileWriter("viz/topic-" +
         topic +
         ".csv"));
       bw.write("text,size,topic");

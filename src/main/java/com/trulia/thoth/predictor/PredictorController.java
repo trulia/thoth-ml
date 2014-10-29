@@ -28,6 +28,8 @@ import java.io.InputStream;
   ModelHealth modelHealth;
   @Autowired
   private Model model;
+  @Autowired
+  private StaticModelHealth staticModelHealth;
 
   @Value("${thoth.predictor.model.health.invalid.score}")
   private String PREDICTOR_MODEL_HEALTH_INVALID_SCORE;
@@ -36,6 +38,7 @@ import java.io.InputStream;
   private static final String INVALIDATE_MODEL = "invalidateModel";
   // Model health score
   private static final String GET_MODEL_HEALTH_SCORE = "getModelHealthScore";
+  private static final String GET_MODEL_GENERIC_SCORE = "getScore";
   private static final String SET_INVALID_MODEL_HEALTH_SCORE = "setInvalidModelHealthScore";
   private static final String RESET_MODEL_HEALTH_SCORE = "resetModelHealthScore";
 
@@ -50,7 +53,7 @@ import java.io.InputStream;
     return new ResponseEntity<String>(model.getVersion(), HttpStatus.OK);
   }
   else if (TRAIN_MODEL_ACTION.equals(action)){
-    model.generateDataSet();
+    //model.generateDataSet();
     model.trainModel();
     modelHealth.setHealthScore(0.0f);
     return new ResponseEntity<String>("", HttpStatus.OK);
@@ -61,6 +64,17 @@ import java.io.InputStream;
   }
   else if (GET_MODEL_HEALTH_SCORE.equals(action)){
     return new ResponseEntity<String>(String.valueOf(modelHealth.getHealthScore()), HttpStatus.OK);
+  }
+  else if (GET_MODEL_GENERIC_SCORE.equals(action)){
+    String json = "{\n" +
+        "    \"count\": "+staticModelHealth.getSampleCount()+",\n" +
+        "    \"errors\": "+staticModelHealth.getPredictionErrors()+",\n" +
+        "    \"falsePositive\": "+staticModelHealth.getFalsePositive()+",\n" +
+        "    \"falseNegative\": "+staticModelHealth.getFalseNegative()+",\n" +
+        "    \"truePositive\": "+staticModelHealth.getTruePositive()+",\n" +
+        "    \"trueNegative\": "+staticModelHealth.getTrueNegative()+"\n" +
+        "}";
+    return new ResponseEntity<String>(json, HttpStatus.OK);
   }
   else if (SET_INVALID_MODEL_HEALTH_SCORE.equals(action)){
     modelHealth.setHealthScore(Float.parseFloat(PREDICTOR_MODEL_HEALTH_INVALID_SCORE));
