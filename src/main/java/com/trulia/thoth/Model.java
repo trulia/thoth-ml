@@ -303,7 +303,7 @@ public class Model {
     gbm.learn_rate = 0.1f;
     gbm.min_rows = 10;
     gbm.nbins = 20;
-    gbm.cols =  new int[] {1,2,3,4,5,6,7,8,9,10};
+    gbm.cols =  new int[] {1,2,3,4,5,6,7,8,9};
 
     gbm.invoke();
     GBM.GBMModel model = UKV.get(gbm.dest());
