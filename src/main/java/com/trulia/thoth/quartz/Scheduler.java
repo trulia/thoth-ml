@@ -17,7 +17,12 @@ public class Scheduler {
   private String thothIndex;
   private String schedule;
   private ModelHealth modelHealth;
-  private StaticModelHealth staticModelHealth;
+
+  //TODO: To remove ASAP  - BEST-1377
+  private StaticModelHealth drStaticModelHealth;
+  private StaticModelHealth googleStaticModelHealth;
+  private StaticModelHealth mobileStaticModelHealth;
+  private StaticModelHealth userStaticModelHealth;
 
   public void init() throws SchedulerException {
     if (samplingEnabled){
@@ -40,7 +45,13 @@ public class Scheduler {
       scheduler.getContext().put("mergingDir", mergingDir);
       scheduler.getContext().put("thothIndex",thothIndex);
       scheduler.getContext().put("modelHealth",modelHealth);
-      scheduler.getContext().put("staticModelHealth",staticModelHealth);
+
+      //TODO: To remove ASAP  - BEST-1377
+      scheduler.getContext().put("userStaticModelHealth",userStaticModelHealth);
+      scheduler.getContext().put("drStaticModelHealth",drStaticModelHealth);
+      scheduler.getContext().put("googleStaticModelHealth",googleStaticModelHealth);
+      scheduler.getContext().put("mobileStaticModelHealth",mobileStaticModelHealth);
+
       scheduler.scheduleJob(workerJob, workerTrigger);
     } else {
       System.out.println("Sampling disabled. Skipping.");
@@ -105,11 +116,35 @@ public class Scheduler {
     return modelHealth;
   }
 
-  public void setStaticModelHealth(StaticModelHealth staticModelHealth) {
-    this.staticModelHealth = staticModelHealth;
+  public void setDrStaticModelHealth(StaticModelHealth drStaticModelHealth) {
+    this.drStaticModelHealth = drStaticModelHealth;
   }
 
-  public StaticModelHealth getStaticModelHealth() {
-    return staticModelHealth;
+  public StaticModelHealth getDrStaticModelHealth() {
+    return drStaticModelHealth;
+  }
+
+  public void setGoogleStaticModelHealth(StaticModelHealth googleStaticModelHealth) {
+    this.googleStaticModelHealth = googleStaticModelHealth;
+  }
+
+  public StaticModelHealth getGoogleStaticModelHealth() {
+    return googleStaticModelHealth;
+  }
+
+  public void setMobileStaticModelHealth(StaticModelHealth mobileStaticModelHealth) {
+    this.mobileStaticModelHealth = mobileStaticModelHealth;
+  }
+
+  public StaticModelHealth getMobileStaticModelHealth() {
+    return mobileStaticModelHealth;
+  }
+
+  public void setUserStaticModelHealth(StaticModelHealth userStaticModelHealth) {
+    this.userStaticModelHealth = userStaticModelHealth;
+  }
+
+  public StaticModelHealth getUserStaticModelHealth() {
+    return userStaticModelHealth;
   }
 }

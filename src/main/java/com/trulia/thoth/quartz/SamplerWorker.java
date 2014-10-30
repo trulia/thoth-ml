@@ -35,9 +35,23 @@ public class SamplerWorker implements Callable<String>{
   private String fileName;
 
   private ModelHealth modelHealth;
-  private StaticModelHealth staticModelHealth;
+
+  //TODO: To remove ASAP  - BEST-1377
+  private StaticModelHealth userStaticModelHealth;
+  private StaticModelHealth mobileStaticModelHealth;
+  private StaticModelHealth drStaticModelHealth;
+  private StaticModelHealth googleStaticModelHealth;
+  // DR1 : search501
+  private static final String DR1_HOSTNAME = "search501";
+  // Google: search213
+  private static final String GOOGLE_HOSTNAME = "search213";
+  // User: search37
+  private static final String USER_HOSTNAME = "search37";
+  // Mobile: search39
+  private static final String MOBILE_HOSTNAME = "search39";
 
 
+  private static final int SLOW_FAST_QUERY_QTIME_THRESHOLD = 100;
   private String hostname;
   private String port;
   private String core;
@@ -66,7 +80,8 @@ public class SamplerWorker implements Callable<String>{
     return items.subList(0, m);
   }
 
-  public SamplerWorker(ServerDetail server, String samplingDirectory, ObjectMapper mapper, HttpSolrServer thothIndex, ModelHealth modelHealth, StaticModelHealth staticModelHealth) throws IOException {
+  public SamplerWorker(ServerDetail server, String samplingDirectory, ObjectMapper mapper, HttpSolrServer thothIndex, ModelHealth modelHealth,
+                       StaticModelHealth userStaticModelHealth,StaticModelHealth drStaticModelHealth,StaticModelHealth mobileStaticModelHealth,StaticModelHealth googleStaticModelHealth ) throws IOException {
     this.server = server;
     this.mapper = mapper;
     DateFormat dateFormat = new SimpleDateFormat("yyyy_MM_dd");
@@ -79,7 +94,12 @@ public class SamplerWorker implements Callable<String>{
     this.port = server.getPort();
     this.thothIndex = thothIndex;
     this.modelHealth = modelHealth;
-    this.staticModelHealth = staticModelHealth;
+
+    this.userStaticModelHealth = userStaticModelHealth;
+    this.drStaticModelHealth = drStaticModelHealth;
+    this.mobileStaticModelHealth = mobileStaticModelHealth;
+    this.googleStaticModelHealth = googleStaticModelHealth;
+
   }
 
   public String writeValueOrEmptyString(SolrDocument doc, String fieldName){
@@ -149,6 +169,27 @@ public class SamplerWorker implements Callable<String>{
 
   }
 
+  //TODO: To remove ASAP  - BEST-1377
+  public void setSetStaticHealth(int qtime, boolean isDocumentIdentifiedAsSlow, boolean isSlowQueryPredictionValid, String hostname, StaticModelHealth staticModelHealth){
+    staticModelHealth.incrementSampleCount();
+      if (qtime > SLOW_FAST_QUERY_QTIME_THRESHOLD){
+        if (isDocumentIdentifiedAsSlow){
+          staticModelHealth.incrementTruePositive();
+        } else {
+          staticModelHealth.incrementFalseNegative();
+        }
+      } else {
+        if (isDocumentIdentifiedAsSlow){
+          staticModelHealth.incrementFalsePositive();
+        } else {
+          staticModelHealth.incrementTrueNegative();
+        }
+      }
+      if (!isSlowQueryPredictionValid){
+        staticModelHealth.incrementPredictionErrors();
+      }
+  }
+
   @Override
   public String call() throws Exception {
     SolrQuery solrQuery = new SolrQuery("hostname_s:"+hostname+" AND port_i:"+port+" AND pool_s:"+pool+" AND coreName_s:"+core+" AND NOT exception_b:true AND NOT source_s:WatchingRequest" );
@@ -166,32 +207,27 @@ public class SamplerWorker implements Callable<String>{
 
     List<SolrDocument> sample = randomSample(solrDocumentList, 100);
     for (SolrDocument doc: sample){
+
+
       // Update the model health based on the accuracy of the current prediction
       modelHealth.computeScore(((Boolean) doc.getFieldValue("isSlowQueryPredictionValid_b")) == true ? 0:1);
 
-      staticModelHealth.incrementSampleCount();
+      Integer qtime = (Integer) doc.getFieldValue("qtime_i");
+      boolean isDocumentIdentifiedAsSlow = (Boolean) doc.getFieldValue("slowQuery_b") == true;
+      boolean isSlowQueryPredictionValid = ((Boolean) doc.getFieldValue("isSlowQueryPredictionValid_b")) == true;
 
-      if ((Integer) doc.getFieldValue("qtime_i") > 100){
-        if ((Boolean) doc.getFieldValue("slowQuery_b") == true){
-          staticModelHealth.incrementTruePositive();
-        } else{
-          staticModelHealth.incrementFalseNegative();
-        }
-      } else {
-        if ((Boolean) doc.getFieldValue("slowQuery_b") == true){
-          staticModelHealth.incrementFalsePositive();
-        } else{
-          staticModelHealth.incrementTrueNegative();
-        }
+
+      //TODO: To remove ASAP  - BEST-1377
+      if (DR1_HOSTNAME.equals(hostname)){
+        setSetStaticHealth(qtime,isDocumentIdentifiedAsSlow,isSlowQueryPredictionValid,hostname, drStaticModelHealth);
+      } else if (GOOGLE_HOSTNAME.equals(hostname)){
+        setSetStaticHealth(qtime,isDocumentIdentifiedAsSlow,isSlowQueryPredictionValid,hostname, googleStaticModelHealth);
+      } else if (MOBILE_HOSTNAME.equals(hostname)){
+        setSetStaticHealth(qtime,isDocumentIdentifiedAsSlow,isSlowQueryPredictionValid,hostname, mobileStaticModelHealth);
+      } else if (USER_HOSTNAME.equals(hostname)){
+        setSetStaticHealth(qtime,isDocumentIdentifiedAsSlow,isSlowQueryPredictionValid,hostname, userStaticModelHealth);
       }
 
-      if (((Boolean) doc.getFieldValue("isSlowQueryPredictionValid_b")) == false){
-        staticModelHealth.incrementPredictionErrors();
-      }
-
-      if (((Boolean) doc.getFieldValue("isSlowQueryPredictionValid_b")) == false){
-        staticModelHealth.incrementPredictionErrors();
-      }
 
       for (String fieldName: samplingFields){
 
@@ -216,7 +252,7 @@ public class SamplerWorker implements Callable<String>{
   public static void main(String[] args) throws IOException {
     String params = "q={!spatial circles=33.6942,-112.033,1}(asmtBuildingArea_i:[ 2000 TO * ] ) AND (latitude_f:[ 33.27584 TO 34.06266 ]) AND (longitude_f:[ -112.32953 TO -111.91321 ])&sort=lastSaleDate_s desc&ghl=9w0sn3wx9c7-9mzg4bbgesf&fq=propertyId_s:[* TO *]&fq=lastSaleDate_s:[\"2013-10-09\" TO *]&fq=lastSalePrice_i:[1 TO *]&version=2.2&start=15&rows=15&cachebust=NOVERSION&wt=json&slowpool=1";
     ObjectMapper om  = new ObjectMapper();
-    SamplerWorker samplerWorker = new SamplerWorker(new ServerDetail("","","",""),"", om, new HttpSolrServer("http://thoth:8983/solr/collection1"), null, null);
+    SamplerWorker samplerWorker = new SamplerWorker(new ServerDetail("","","",""),"", om, new HttpSolrServer("http://thoth:8983/solr/collection1"), null, null, null,null,null);
     System.out.println(samplerWorker.extractDetailsFromParams(params));
 
   }

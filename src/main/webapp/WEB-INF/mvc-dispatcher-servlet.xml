@@ -24,8 +24,12 @@
         </property>
     </bean>
 
+    <!--  //TODO: To remove ASAP  - BEST-1377 -->
     <bean id="modelHealth" class="com.trulia.thoth.predictor.ModelHealth"/>
-    <bean id="staticModelHealth" class="com.trulia.thoth.predictor.StaticModelHealth"/>
+    <bean id="drStaticModelHealth" class="com.trulia.thoth.predictor.StaticModelHealth"/>
+    <bean id="googleStaticModelHealth" class="com.trulia.thoth.predictor.StaticModelHealth"/>
+    <bean id="mobileStaticModelHealth" class="com.trulia.thoth.predictor.StaticModelHealth"/>
+    <bean id="userStaticModelHealth" class="com.trulia.thoth.predictor.StaticModelHealth"/>
 
     <bean id="sampler" class="com.trulia.thoth.quartz.Scheduler" init-method="init">
         <property name="samplingEnabled" value="${thoth.sampling.enabled}"/>
@@ -34,7 +38,16 @@
         <property name="thothIndex" value="${thoth.index.url}"/>
         <property name="schedule" value="${thoth.sampling.schedule}"/>
         <property name="modelHealth" ref="modelHealth"/>
-        <property name="staticModelHealth" ref="staticModelHealth"/>
+        <!--//TODO: To remove ASAP  - BEST-1377-->
+        <!-- DR1 -->
+        <property name="drStaticModelHealth" ref="drStaticModelHealth"/>
+        <!-- Google Bot -->
+        <property name="googleStaticModelHealth" ref="googleStaticModelHealth"/>
+        <!-- Mobile -->
+        <property name="mobileStaticModelHealth" ref="mobileStaticModelHealth"/>
+        <!-- User -->
+        <property name="userStaticModelHealth" ref="userStaticModelHealth"/>
+
     </bean>
 
 

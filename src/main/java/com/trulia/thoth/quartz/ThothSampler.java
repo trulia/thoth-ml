@@ -55,9 +55,15 @@ public class ThothSampler implements Job {
       mergeDirectory = (String)schedulerContext.get("mergingDir");
       samplingDirectory = (String)schedulerContext.get("samplingDir");
       ModelHealth modelHealth = (ModelHealth)schedulerContext.get("modelHealth");
-      StaticModelHealth staticModelHealth = (StaticModelHealth)schedulerContext.get("staticModelHealth");
       HttpSolrServer thothIndex = new HttpSolrServer((String)schedulerContext.get("thothIndex"));
       ThothServers thothServers = new ThothServers();
+
+      //TODO: To remove ASAP  - BEST-1377
+      StaticModelHealth userStaticModelHealth = (StaticModelHealth)schedulerContext.get("userStaticModelHealth");
+      StaticModelHealth drStaticModelHealth = (StaticModelHealth)schedulerContext.get("drStaticModelHealth");
+      StaticModelHealth mobileStaticModelHealth = (StaticModelHealth)schedulerContext.get("mobileStaticModelHealth");
+      StaticModelHealth googleStaticModelHealth = (StaticModelHealth)schedulerContext.get("googleStaticModelHealth");
+
 
       //TODO: fix
       serversDetail = thothServers.getList(thothIndex);
@@ -82,7 +88,11 @@ public class ThothSampler implements Job {
                 mapper,
                 thothIndex,
                 modelHealth,
-                staticModelHealth));
+                userStaticModelHealth,
+                drStaticModelHealth,
+                mobileStaticModelHealth,
+                googleStaticModelHealth
+            ));
             futureList.add(future);
           } catch (IOException e) {
             e.printStackTrace();
