@@ -87,6 +87,7 @@ import java.io.InputStream;
   else if (TRAIN_MODEL_ACTION.equals(action)){
     model.generateDataSet();
     model.trainModel();
+    drStaticModelHealth.resetCounters();
     modelHealth.setHealthScore(0.0f);
     return new ResponseEntity<String>("", HttpStatus.OK);
   }

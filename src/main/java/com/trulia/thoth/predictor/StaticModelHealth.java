@@ -70,5 +70,13 @@ public class StaticModelHealth {
     return ((2.0f * truePositive)/(2*truePositive + falseNegative + falsePositive));
   }
 
+  public void resetCounters(){
+    sampleCount = 0;
+    falsePositive = 0;
+    falseNegative = 0 ;
+    truePositive = 0;
+    trueNegative = 0;
+  }
+
 
 }
