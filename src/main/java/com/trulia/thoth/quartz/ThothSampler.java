@@ -68,7 +68,12 @@ public class ThothSampler implements Job {
       //TODO: fix
       serversDetail = thothServers.getList(thothIndex);
       //serversDetail = new ArrayList<ServerDetail>();
-      //serversDetail.add(new ServerDetail("search22", "bot", "8050", "active"));
+      //serversDetail.add(new ServerDetail("search501", "bot", "8050", "active"));
+      //serversDetail.add(new ServerDetail("search504", "bot", "8050", "active"));
+      //serversDetail.add(new ServerDetail("search510", "bot", "8050", "active"));
+      //serversDetail.add(new ServerDetail("search502", "bot", "8050", "active"));
+      //
+
 
       ExecutorService service = Executors.newFixedThreadPool(10);
       futureList = new ArrayList<Future>();
