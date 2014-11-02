@@ -13,6 +13,7 @@ public class StaticModelHealth {
 
   private int truePositive;
   private int trueNegative;
+  private float f1 = 0.0f;
 
   public void incrementTruePositive(){
     truePositive++;
@@ -64,4 +65,10 @@ public class StaticModelHealth {
   public int getTrueNegative() {
     return trueNegative;
   }
+
+  public float getF1() {
+    return ((2.0f * truePositive)/(2*truePositive + falseNegative + falsePositive));
+  }
+
+
 }

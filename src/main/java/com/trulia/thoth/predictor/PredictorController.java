@@ -71,7 +71,8 @@ import java.io.InputStream;
         "    \"falsePositive\": "+staticModelHealth.getFalsePositive()+",\n" +
         "    \"falseNegative\": "+staticModelHealth.getFalseNegative()+",\n" +
         "    \"truePositive\": "+staticModelHealth.getTruePositive()+",\n" +
-        "    \"trueNegative\": "+staticModelHealth.getTrueNegative()+"\n" +
+        "    \"trueNegative\": "+staticModelHealth.getTrueNegative()+",\n" +
+       "    \"f1\": "+staticModelHealth.getF1()+"\n" +
         "}";
   }
 
