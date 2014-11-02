@@ -338,6 +338,8 @@ public class Model {
     gbm.min_rows = 10;
     gbm.nbins = 20;
     gbm.cols =  new int[] {1,2,3,4,5,6,7,8,9};
+    gbm.validation = ftest;
+
 
     gbm.invoke();
     GBM.GBMModel model = UKV.get(gbm.dest());
