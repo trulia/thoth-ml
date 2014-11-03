@@ -333,7 +333,7 @@ public class Model {
                                     Vec prep(Frame fr) { return fr.vecs()[0]; } }.prep(gbm.source);
     gbm.ntrees = 1000;
     //    gbm.max_depth = 3;
-    gbm.balance_classes = false;
+    gbm.balance_classes = true;
     gbm.learn_rate = 0.1f;
     gbm.min_rows = 10;
     gbm.nbins = 20;
