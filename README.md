@@ -1,7 +1,7 @@
-|     ![Thoth](/../master/img/thoth-logo.png?raw=true)    |            Thoth ML|
-| ------------- |:-------------:|
+<img align="left" src="thoth.png?raw=true">  &nbsp;&nbsp; Thoth ML 
+======================
+<br><br>
 
-===============
 
 Basic configuration
 --------------------
