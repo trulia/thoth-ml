@@ -148,4 +148,25 @@ import java.io.InputStream;
 
   }
 
+
+
+  @RequestMapping(value = "/threshold/{model_version}", method = RequestMethod.GET)
+  public void getThreshold(
+      @PathVariable("model_version") String version,
+      HttpServletResponse response) {
+
+    String fileName = model.getModelLocation() + "/gbm_model_threshold_v" + version;
+    try {
+      // get your file as InputStream
+      InputStream is = new FileInputStream(new File(fileName));
+      // copy it to response's OutputStream
+      org.apache.commons.io.IOUtils.copy(is, response.getOutputStream());
+      response.flushBuffer();
+    } catch (IOException ex) {
+      System.out.println(String.format("Error writing file to output stream. Filename was '{}'", fileName, ex));
+      throw new RuntimeException("IOError writing file to output stream");
+    }
+
+  }
+
 }

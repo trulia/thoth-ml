@@ -428,6 +428,11 @@ public class Model {
     // Model serialization
     File modelFile = new File(args[2] + "/gbm_model_v" + args[3]);
     new Model2FileBinarySerializer().save(model, modelFile);
+    // Writing threshold to disk
+    File thresholdFile = new File(args[2] + "/gbm_model_threshold_v" + args[3]);
+    PrintWriter pw = new PrintWriter(new FileWriter(thresholdFile));
+    pw.write(String.valueOf(threshold));
+    pw.close();
   }
 
   private abstract static class PrepData { abstract Vec prep(Frame fr); }
