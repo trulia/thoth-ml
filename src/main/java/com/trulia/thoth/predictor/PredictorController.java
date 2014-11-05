@@ -72,7 +72,8 @@ import java.io.InputStream;
         "    \"falseNegative\": "+staticModelHealth.getFalseNegative()+",\n" +
         "    \"truePositive\": "+staticModelHealth.getTruePositive()+",\n" +
         "    \"trueNegative\": "+staticModelHealth.getTrueNegative()+",\n" +
-       "    \"f1\": "+staticModelHealth.getF1()+"\n" +
+       //"    \"f1\": "+staticModelHealth.getF1()+"\n" +
+       "    \"avgPerClassError\": "+staticModelHealth.getAvgPerClassError()+"\n" +
         "}";
   }
 
@@ -88,6 +89,9 @@ import java.io.InputStream;
     model.generateDataSet();
     model.trainModel();
     drStaticModelHealth.resetCounters();
+    googleStaticModelHealth.resetCounters();
+    mobileStaticModelHealth.resetCounters();
+    userStaticModelHealth.resetCounters();
     modelHealth.setHealthScore(0.0f);
     return new ResponseEntity<String>("", HttpStatus.OK);
   }

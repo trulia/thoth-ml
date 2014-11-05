@@ -13,7 +13,12 @@ public class StaticModelHealth {
 
   private int truePositive;
   private int trueNegative;
-  private float f1 = 0.0f;
+
+  public float getAvgPerClassError() {
+    float score = ((1.0f* falseNegative)/(falseNegative + truePositive) + (1.0f * falsePositive)/(falsePositive+trueNegative))/2;
+    if (Float.isNaN(score)) return 0.0f;
+    else return score;
+  }
 
   public void incrementTruePositive(){
     truePositive++;
@@ -66,12 +71,13 @@ public class StaticModelHealth {
     return trueNegative;
   }
 
-  public float getF1() {
-    return ((2.0f * truePositive)/(2*truePositive + falseNegative + falsePositive));
-  }
+  //public float getF1() {
+  //  return ((2.0f * truePositive)/(2*truePositive + falseNegative + falsePositive));
+  //}
 
   public void resetCounters(){
     sampleCount = 0;
+    predictionErrors = 0;
     falsePositive = 0;
     falseNegative = 0 ;
     truePositive = 0;

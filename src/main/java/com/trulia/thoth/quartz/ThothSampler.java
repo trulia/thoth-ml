@@ -25,6 +25,7 @@ import java.util.concurrent.*;
 public class ThothSampler implements Job {
   private static final Logger LOG = Logger.getLogger(ThothSampler.class);
   private List<ServerDetail> serversDetail = null;
+  private List<ServerDetail> ignored = null;
   private List<Future> futureList;
   private String mergeDirectory;
   private String samplingDirectory;
@@ -44,6 +45,17 @@ public class ThothSampler implements Job {
     return filelist;
   }
 
+  private boolean isIgnored(ServerDetail serverDetail){
+    for (ServerDetail toCheck: ignored){
+      if ((toCheck.getName().equals(serverDetail.getName())) &&
+          (toCheck.getCore().equals(serverDetail.getCore())) &&
+          (toCheck.getPool().equals(serverDetail.getPool())) &&
+          (toCheck.getPort().equals(serverDetail.getPort()))){
+        return true;
+      }
+    }
+    return false;
+  }
 
   @Override
   public void execute(JobExecutionContext context) throws JobExecutionException {
@@ -67,11 +79,41 @@ public class ThothSampler implements Job {
 
       //TODO: fix
       serversDetail = thothServers.getList(thothIndex);
+
+
+
+      ignored  = new ArrayList<ServerDetail>();
+      ignored.add(new ServerDetail("search200", "user","8050","active"));
+      ignored.add(new ServerDetail("search228", "user","8050","active"));
+      ignored.add(new ServerDetail("search254", "user","8050","active"));
+      ignored.add(new ServerDetail("search255", "user","8050","active"));
+      ignored.add(new ServerDetail("search39", "user","8050","active"));
+
+      ignored.add(new ServerDetail("search42", "user","8050","active"));
+      ignored.add(new ServerDetail("search43", "user","8050","active"));
+      ignored.add(new ServerDetail("search44", "user","8050","active"));
+      ignored.add(new ServerDetail("search252", "user","8050","active"));
+      ignored.add(new ServerDetail("search253", "user","8050","active"));
+
+
       //serversDetail = new ArrayList<ServerDetail>();
-      //serversDetail.add(new ServerDetail("search501", "bot", "8050", "active"));
-      //serversDetail.add(new ServerDetail("search504", "bot", "8050", "active"));
-      //serversDetail.add(new ServerDetail("search510", "bot", "8050", "active"));
-      //serversDetail.add(new ServerDetail("search502", "bot", "8050", "active"));
+      //serversDetail.add(new ServerDetail("search213", "user", "8050", "active"));
+      //serversDetail.add(new ServerDetail("search204", "user", "8050", "active"));
+      //serversDetail.add(new ServerDetail("search205", "user", "8050", "active"));
+      //serversDetail.add(new ServerDetail("search222", "user", "8050", "active"));
+      //serversDetail.add(new ServerDetail("search38", "user", "8050", "active"));
+      //serversDetail.add(new ServerDetail("search37", "user", "8050", "active"));
+      //serversDetail.add(new ServerDetail("search256", "user", "8050", "active"));
+      //serversDetail.add(new ServerDetail("search257", "user", "8050", "active"));
+      //serversDetail.add(new ServerDetail("search258", "user", "8050", "active"));
+      //serversDetail.add(new ServerDetail("search259", "user", "8050", "active"));
+      //serversDetail.add(new ServerDetail("search222", "user", "8050", "active"));
+      //serversDetail.add(new ServerDetail("search25", "user", "8050", "active"));
+      //serversDetail.add(new ServerDetail("search26", "user", "8050", "active"));
+      //serversDetail.add(new ServerDetail("search226", "user", "8050", "active"));
+      //serversDetail.add(new ServerDetail("search20", "user", "8050", "active"));
+      //serversDetail.add(new ServerDetail("search246", "user", "8050", "active"));
+      //serversDetail.add(new ServerDetail("search247", "user", "8050", "active"));
       //
 
 
@@ -86,6 +128,9 @@ public class ThothSampler implements Job {
       if (success || dir.exists() ) {
 
         for (ServerDetail server: serversDetail){
+
+          if (isIgnored(server)) continue;
+
           try {
             Future<String> future = ser.submit(new SamplerWorker(
                 server,
