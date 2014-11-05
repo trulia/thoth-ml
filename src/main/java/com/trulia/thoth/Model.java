@@ -13,6 +13,8 @@ import water.Boot;
 import water.H2O;
 import water.Key;
 import water.UKV;
+import water.api.AUC;
+import water.api.AUCData;
 import water.fvec.Frame;
 import water.fvec.NFSFileVec;
 import water.fvec.ParseDataset2;
@@ -343,6 +345,26 @@ public class Model {
 
     gbm.invoke();
     GBM.GBMModel model = UKV.get(gbm.dest());
+
+    // Get threshold
+    Frame fpreds = gbm.score(ftest);
+    AUC auc = new AUC();
+    auc.actual = ftest;
+    auc.vactual = ftest.vecs()[ftest.find("C1")];
+    auc.predict = fpreds;
+    auc.vpredict = fpreds.vecs()[2];
+    auc.invoke();
+
+    AUCData aucData = auc.data();
+    aucData.threshold_criterion = AUC.ThresholdCriterion.maximum_F1;
+    double threshold = aucData.threshold();
+    System.out.println(threshold);
+    aucData.threshold_criterion = AUC.ThresholdCriterion.maximum_Accuracy;
+    threshold = aucData.threshold();
+    System.out.println(threshold);
+    aucData.threshold_criterion = AUC.ThresholdCriterion.minimizing_max_per_class_Error;
+    threshold = aucData.threshold();
+    System.out.println(threshold);
 
     // Model serialization
     File modelFile = new File(args[2] + "/gbm_model_v" + args[3]);
