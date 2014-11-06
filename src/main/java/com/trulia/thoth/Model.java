@@ -4,6 +4,7 @@ import com.trulia.thoth.pojo.QueryPojo;
 import com.trulia.thoth.pojo.QuerySamplingDetails;
 import com.trulia.thoth.util.Utils;
 import hex.gbm.GBM;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -214,59 +215,6 @@ public class Model {
    * Generate datasets
    * @throws IOException
    */
-//  public void generateDataSet() throws IOException {
-//    LOG.info("Generating dataset ...");
-//    // Get file that contains Thoth sample data
-//    BufferedReader br = new BufferedReader(new FileReader(Utils.getThothSampledFileName(mergeDirectory)));
-//    // Training and Test datasets
-//    ArrayList<Double[]> train = new ArrayList<Double[]>();
-//    ArrayList<Double[]> test = new ArrayList<Double[]>();
-//
-//    String line;
-//    while ((line=br.readLine()) != null) {
-//      String[] splitLine = line.split("\t");
-//      if (splitLine.length != 7) continue; //TODO: too specific, need to make it generic
-//      Double[] instance = null;
-//      instance = createInstance(getQueryPojoFromSplitLine(splitLine));
-//      if(instance == null) continue;
-//
-//      // Separate into training and test
-//      int next = random.nextInt(100);
-//      if (next >= 70) {
-//        test.add(instance);
-//      }
-//      else {
-//        train.add(instance);
-//      }
-//    }
-//
-////    int positive = 0, negative = 0;
-////    for(int i=0; i<train.size(); i++) {
-////      Double[] row = train.get(i);
-////      Double label = row[0];
-////      if(label != null) {
-////        if(label == 1.0)
-////          positive++;
-////        else if(label == 0.0)
-////          negative++;
-////        else
-////          LOG.info("Invalid class label");
-////      }
-////      else {
-////        LOG.info("Null class label");
-////      }
-////    }
-////
-////    LOG.info("Positive: " + positive + " Negative: " + negative);
-//
-//    // Export train and test datasets
-//    exportDataset(train, exportedTrainDataset);
-//    exportDataset(test, exportedTestDataset);
-//    LOG.info("Training set size: " + train.size());
-//    LOG.info("Test set size: " + test.size());
-//
-//  }
-
   public void generateDataSet() throws IOException {
     LOG.info("Generating dataset ...");
     // Get file that contains Thoth sample data
@@ -274,9 +222,7 @@ public class Model {
     // Training and Test datasets
     ArrayList<Double[]> train = new ArrayList<Double[]>();
     ArrayList<Double[]> test = new ArrayList<Double[]>();
-    ArrayList<Double[]> dataset = new ArrayList<Double[]>();
 
-    int pos = 0, neg = 0, total = 0;
     String line;
     while ((line=br.readLine()) != null) {
       String[] splitLine = line.split("\t");
@@ -285,11 +231,7 @@ public class Model {
       instance = createInstance(getQueryPojoFromSplitLine(splitLine));
       if(instance == null) continue;
 
-      total++;
-      if(instance[0] == 0.0)
-        neg++;
-      else
-        pos++;
+      System.out.println("instance " + ArrayUtils.toString(instance));
 
       // Separate into training and test
       int next = random.nextInt(100);
@@ -301,30 +243,34 @@ public class Model {
       }
     }
 
-    int subsamplingRatio = neg/pos;
-    subsamplingRatio = subsamplingRatio/2;
-    LOG.info("Positive: " + pos + " Neg: " + neg + "Subsampling ratio: " + subsamplingRatio);
-
-    // Rebalance dataset
-    ArrayList<Double[]> finalTrain = new ArrayList<Double[]>();
-    for (Double[] row : train) {
-      if(row[0] == 1.0)
-        finalTrain.add(row);
-      else {
-        int next = random.nextInt(subsamplingRatio + 1);
-        if (next == 1) {
-          finalTrain.add(row);
-        }
-      }
-    }
+//    int positive = 0, negative = 0;
+//    for(int i=0; i<train.size(); i++) {
+//      Double[] row = train.get(i);
+//      Double label = row[0];
+//      if(label != null) {
+//        if(label == 1.0)
+//          positive++;
+//        else if(label == 0.0)
+//          negative++;
+//        else
+//          LOG.info("Invalid class label");
+//      }
+//      else {
+//        LOG.info("Null class label");
+//      }
+//    }
+//
+//    LOG.info("Positive: " + positive + " Negative: " + negative);
 
     // Export train and test datasets
-    exportDataset(finalTrain, exportedTrainDataset);
+    exportDataset(train, exportedTrainDataset);
     exportDataset(test, exportedTestDataset);
-    LOG.info("Training set size: " + finalTrain.size());
+    LOG.info("Training set size: " + train.size());
     LOG.info("Test set size: " + test.size());
 
   }
+
+
 
   /**
    * Exports dataset to file
@@ -392,7 +338,7 @@ public class Model {
     gbm.source = ParseDataset2.parse(dest1, new Key[]{fkey1});
     gbm.response = new PrepData() { @Override
                                     Vec prep(Frame fr) { return fr.vecs()[0]; } }.prep(gbm.source);
-    gbm.ntrees = 1000;
+    gbm.ntrees = 500;
     //    gbm.max_depth = 3;
     gbm.balance_classes = true;
     gbm.learn_rate = 0.1f;
@@ -417,13 +363,13 @@ public class Model {
     AUCData aucData = auc.data();
     aucData.threshold_criterion = AUC.ThresholdCriterion.maximum_F1;
     double threshold = aucData.threshold();
-    System.out.println(threshold);
-    aucData.threshold_criterion = AUC.ThresholdCriterion.maximum_Accuracy;
-    threshold = aucData.threshold();
-    System.out.println(threshold);
-    aucData.threshold_criterion = AUC.ThresholdCriterion.minimizing_max_per_class_Error;
-    threshold = aucData.threshold();
-    System.out.println(threshold);
+    //System.out.println(threshold);
+    //aucData.threshold_criterion = AUC.ThresholdCriterion.maximum_Accuracy;
+    //threshold = aucData.threshold();
+    //System.out.println(threshold);
+    //aucData.threshold_criterion = AUC.ThresholdCriterion.minimizing_max_per_class_Error;
+    //threshold = aucData.threshold();
+    //System.out.println(threshold);
 
     // Model serialization
     File modelFile = new File(args[2] + "/gbm_model_v" + args[3]);

@@ -205,7 +205,9 @@ public class SamplerWorker implements Callable<String>{
       return "skipped";
     }
 
-    List<SolrDocument> sample = randomSample(solrDocumentList, 100);
+    List<SolrDocument> sample = solrDocumentList;
+        //= randomSample(solrDocumentList, 1000);
+
     for (SolrDocument doc: sample){
 
 
@@ -218,9 +220,14 @@ public class SamplerWorker implements Callable<String>{
 
 
       //TODO: To remove ASAP  - BEST-1377
-      if (DR1_HOSTNAME.equals(hostname)){
+
+      if (((String)doc.getFieldValue("params_s")).contains("truliatest")){
         setSetStaticHealth(qtime,isDocumentIdentifiedAsSlow,isSlowQueryPredictionValid,hostname, drStaticModelHealth);
-      } else if (GOOGLE_HOSTNAME.equals(hostname)){
+
+
+      }
+
+      if (GOOGLE_HOSTNAME.equals(hostname)){
         setSetStaticHealth(qtime,isDocumentIdentifiedAsSlow,isSlowQueryPredictionValid,hostname, googleStaticModelHealth);
       } else if (MOBILE_HOSTNAME.equals(hostname)){
         setSetStaticHealth(qtime,isDocumentIdentifiedAsSlow,isSlowQueryPredictionValid,hostname, mobileStaticModelHealth);
