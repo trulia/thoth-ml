@@ -338,7 +338,7 @@ public class Model {
     gbm.source = ParseDataset2.parse(dest1, new Key[]{fkey1});
     gbm.response = new PrepData() { @Override
                                     Vec prep(Frame fr) { return fr.vecs()[0]; } }.prep(gbm.source);
-    gbm.ntrees = 500;
+    gbm.ntrees = 1000;
     //    gbm.max_depth = 3;
     gbm.balance_classes = true;
     gbm.learn_rate = 0.1f;

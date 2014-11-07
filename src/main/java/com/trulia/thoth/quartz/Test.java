@@ -1,216 +1,196 @@
 package com.trulia.thoth.quartz;
 
+import com.trulia.thoth.pojo.QueryPojo;
 import com.trulia.thoth.pojo.QuerySamplingDetails;
-import com.trulia.thoth.pojo.ServerDetail;
-import com.trulia.thoth.util.ThothServers;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.solr.client.solrj.SolrQuery;
-import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.client.solrj.impl.HttpSolrServer;
-import org.apache.solr.client.solrj.response.QueryResponse;
-import org.apache.solr.common.SolrDocument;
-import org.apache.solr.common.SolrDocumentList;
+import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * User: dbraga - Date: 10/13/14
  */
 public class Test {
 
+  static final int slowQueryThreshold = 100;
+  static ObjectMapper mapper = new ObjectMapper();
+  static {
+    mapper.configure(DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+  }
 
+  private static void addBitmaskBooleanFields(ArrayList<Double> instance, String bitmask) {
+    if(bitmask.length() != 7) {
+      System.out.println("Invalid bitmask: " + bitmask);
+      return;
+    }
 
-  private static final Pattern FACET_PATTERN = Pattern.compile("facet=true");
+    instance.add(Double.parseDouble(String.valueOf(bitmask.charAt(0))));
+    instance.add(Double.parseDouble(String.valueOf(bitmask.charAt(1))));
+    instance.add(Double.parseDouble(String.valueOf(bitmask.charAt(2))));
+    instance.add(Double.parseDouble(String.valueOf(bitmask.charAt(3))));
+    instance.add(Double.parseDouble(String.valueOf(bitmask.charAt(4))));
+    instance.add(Double.parseDouble(String.valueOf(bitmask.charAt(5))));
+    instance.add(Double.parseDouble(String.valueOf(bitmask.charAt(6))));
+  }
 
-  private static Pattern RANGE_QUERY_PATTERN = Pattern.compile("\\w*:\\[(.*?TO.*?)\\]");
-  private static Pattern COLLAPSING_SEARCH_PATTERN = Pattern.compile("collapse.field=");
-  private static Pattern GEOSPATIAL_PATTERN = Pattern.compile("!spatial");
-  private static Pattern OPEN_HOMES_PATTERN = Pattern.compile("ohDay_ms:\\[");
-
-  private static boolean checkForMatch(Pattern pattern, String query){
-    Matcher matcher = pattern.matcher(query);
-    if (matcher.find()) return true;
-    else return false;
+  private static QueryPojo getQueryPojoFromSplitLine(String[] fields){
+    QueryPojo queryPojo = new QueryPojo();
+    queryPojo.setParams(fields[3]);
+    if (!fields[4].isEmpty()) queryPojo.setQtime(fields[4]);
+    if (!fields[5].isEmpty()) queryPojo.setHits(fields[5]);
+    queryPojo.setBitmask(fields[6]);
+    return queryPojo;
   }
 
 
-  public static String extractDetailsFromParams(String params) throws IOException {
+  public void generateDataSet() throws IOException {
+    System.out.println("Generating dataset ...");
+    // Get file that contains Thoth sample data
+    BufferedReader br = new BufferedReader(new FileReader("/Users/dbraga/dr"));
+    // Training and Test datasets
+    ArrayList<Double[]> train = new ArrayList<Double[]>();
+    //ArrayList<Double[]> test = new ArrayList<Double[]>();
 
-    ObjectMapper mapper = new ObjectMapper();
+    String line;
+    while ((line=br.readLine()) != null) {
+      String[] splitLine = line.split("\t");
+      if (splitLine.length != 7) continue; //TODO: too specific, need to make it generic
+      Double[] instance = null;
+      instance = createInstance(getQueryPojoFromSplitLine(splitLine));
+      if(instance == null) continue;
 
-    String[] splitted = params.replaceAll("\\{","").replaceAll("\\}", "").split("&");
-    if (splitted.length < 1) return "";
+      //System.out.println("instance " + ArrayUtils.toString(instance));
 
-    QuerySamplingDetails querySamplingDetails = new QuerySamplingDetails();
-
-    QuerySamplingDetails.Details details = new QuerySamplingDetails.Details();
-    QuerySamplingDetails.Feature features = new QuerySamplingDetails.Feature();
-
-    features.setFacet(checkForMatch(FACET_PATTERN, params));
-    features.setCollapsingSearch(checkForMatch(COLLAPSING_SEARCH_PATTERN, params));
-    features.setContainsOpenHomes(checkForMatch(OPEN_HOMES_PATTERN, params));
-    features.setGeospatialSearch(checkForMatch(GEOSPATIAL_PATTERN, params));
-    features.setRangeQuery(checkForMatch(RANGE_QUERY_PATTERN, params));
-
-
-    for (String s : splitted){
-      if ("".equals(s)) continue;
-      String[] elements = s.split("=");
-      if (elements.length == 2) {
-        String k = elements[0];
-        String v = elements[1];
-        try { if ("start".equals(k)) details.setStart(v);} catch (Exception e) {System.out.println(e);};
-        if ("rows".equals(k)) details.setRows(v);
-        else if ("q".equals(k)) details.setQuery(v);
-        else if ("fq".equals(k)) details.setFilterQuery(v);
-        else if ("sort".equals(k)) details.setSort(v);
-        else if ("slowpool".equals(k)) details.setSlowpool(v);
-        else if ("collapse.field".equals(k)) details.setCollapseField(v);
-        else if ("collapse.includeCollapsedDocs.fl".equals(k)) details.setCollapseDocFl(v);
-        else if ("facet.field".equals(k)) details.setFacetField(v);
-        else if ("facet.zeros".equals(k)) details.setFacetZeros(v);
-        else if ("ghl".equals(k)) details.setGhl(v);
-
-
-        else if ( !("cachebust".equals(k)) && !("wt".equals(k)) && !("version".equals(k)) && !("version".equals(k)) && !("fl".equals(k)) ) {
-          // want to know what i'm missing
-          System.out.println("Missing field (" +k+ ")  value ("+v+")");
-        }
-
-      } else if (details.getQuery() == null && features.isGeospatialSearch() && s.contains("spatial")){
-        elements = s.split("!spatial ");
-        details.setQuery(elements[1]);
-      }
-      else System.out.println("Not recognized k,v element. from " + s);
+      // Separate into training and test
+      // Random random = new Random();
+      //int next = random.nextInt(100);
+      //if (next >= 70) {
+        //test.add(instance);
+      //}
+      //else {
+        train.add(instance);
+      //}
     }
 
+    //    int positive = 0, negative = 0;
+    //    for(int i=0; i<train.size(); i++) {
+    //      Double[] row = train.get(i);
+    //      Double label = row[0];
+    //      if(label != null) {
+    //        if(label == 1.0)
+    //          positive++;
+    //        else if(label == 0.0)
+    //          negative++;
+    //        else
+    //          LOG.info("Invalid class label");
+    //      }
+    //      else {
+    //        LOG.info("Null class label");
+    //      }
+    //    }
+    //
+    //    LOG.info("Positive: " + positive + " Negative: " + negative);
 
-
-    querySamplingDetails.setDetails(details);
-    querySamplingDetails.setFeatures(features);
-    //System.out.println("JSON: " + mapper.writeValueAsString(querySamplingDetails));
-    return mapper.writeValueAsString(querySamplingDetails);
+    // Export train and test datasets
+    exportDataset(train, "/Users/dbraga/dr_trained");
+    //exportDataset(test, exportedTestDataset);
+    System.out.println("Training set size: " + train.size());
+    //System.out.println("Test set size: " + test.size());
 
   }
 
 
-  public static void main(String[] args) throws SolrServerException, IOException {
-    File f = new File("/tmp/exceptions");
-    BufferedWriter bw = new BufferedWriter(new PrintWriter(f));
-
-
-    HttpSolrServer thothIndex = new HttpSolrServer("http://thoth:8983/solr/collection1");
-    ThothServers thothServers = new ThothServers();
-
-    ArrayList<ServerDetail> serversDetail = thothServers.getList(thothIndex);
-    //ArrayList<ServerDetail> serversDetail = new ArrayList<ServerDetail>();
-
-    //serversDetail.add(new ServerDetail("search501","bot","8050","active"));
-    for (ServerDetail server: serversDetail){
-      String hostname = server.getName();
-      String port = server.getPort();
-      String pool = server.getPool();
-      String core = server.getCore();
-
-      String[] samplingFields = { "hostname_s", "pool_s", "params_s", "qtime_i", "hits_i", "bitmask_s","stackTrace_s"};
-
-      SolrQuery solrQuery = new SolrQuery("hostname_s:"+hostname+" AND port_i:"+port+" AND pool_s:"+pool+" AND coreName_s:"+core+" AND exception_b:true" );
-      solrQuery.setSort(new SolrQuery.SortClause("timestamp_dt", SolrQuery.ORDER.desc));
-      solrQuery.setRows(500);  // Returning 100 docs
-      QueryResponse qr = thothIndex.query(solrQuery);
-      SolrDocumentList solrDocumentList = qr.getResults();
-
-
-      if (solrDocumentList.size() < 1){
-          break;
-      }
-
-
-      //List<SolrDocument> sample = SamplerWorker.randomSample(solrDocumentList, 100); //Sampling 10
-      List<SolrDocument> sample = solrDocumentList;
-
-      for (SolrDocument doc: sample){
-        for (String fieldName: samplingFields) {
-          if ("params_s".equals(fieldName)) {
-            String extractedDetails = extractDetailsFromParams(writeValueOrEmptyString(doc, fieldName));
-            if (!"".equals(extractedDetails)) {
-
-              bw.write(extractedDetails);
-              bw.write("\t");
-            }
-
-
-          } else {
-            if (fieldName.equals("stackTrace_s"))  bw.write("\t");
-            bw.write(writeValueOrEmptyString(doc,fieldName));
-            bw.write("\t");
-
-            //System.out.println("Field(" + fieldName + ") - Value(" + writeValueOrEmptyString(doc, fieldName) + ")");
-          }
-
-        }
-
-
-        bw.write("\n");
-      }
-
+  /**
+   * Exports dataset to file
+   * @param dataset ArrayList of double arrays
+   * @param path of the file that needs to be stored
+   * @throws IOException
+   */
+  private void exportDataset(ArrayList<Double[]> dataset, String path) throws IOException {
+    if (dataset == null) {
+      System.out.println("Empty dataset. Nothing to export. Skipping ...");
+      return;
     }
 
 
-
-
-
-
-
-
-
-
+    BufferedWriter bw = new BufferedWriter(new FileWriter(path));
+    for (Double[] example: dataset) {
+      if (example.length != 10) { //TODO: too specific, need to make it generic
+        // Perform this check?
+      }
+      StringBuffer sb = new StringBuffer();
+      for(Double value: example) {
+        sb.append(value + "\t");
+      }
+      bw.write(sb.toString().trim());
+      bw.newLine();
+    }
+    bw.flush();
     bw.close();
-
-
   }
 
-  public static String cleanStackTrace(String stackTrace){
-    String output = stackTrace;
-    Set<String> cleaned = new HashSet<String>();
 
-    String[] splitted = output.split("\n");
-    for (String line: splitted){
+  private static Double[] createInstance(QueryPojo queryPojo) throws IOException {
+    ArrayList<Double> instance = new ArrayList<Double>();
+    int pos = 0;
+    try {
+      QuerySamplingDetails querySamplingDetails = mapper.readValue(queryPojo.getParams(), QuerySamplingDetails.class);
+      QuerySamplingDetails.Details details = querySamplingDetails.getDetails();
 
+      if(queryPojo.getQtime() == null) {
+        // Handle this differently during prediction
+        return null;
+      }
+      else {
+        int qtime = Integer.parseInt(queryPojo.getQtime());
+        // --------- for classification --------------
+        if(qtime < slowQueryThreshold) {
+          instance.add(0.0);
+        }
+        else {
+          instance.add(1.0);
+        }
+      }
 
-     if (line.contains("org.mortbay.jetty")) continue;
-     line = line.split("\\(")[0];
-      line = line.substring(line.lastIndexOf('.') + 1);
-     cleaned.add(line);
+      int start = details.getStart();
+      instance.add((double) start);
 
+      String query = details.getQuery();
+      if(query != null) {
+        query = query.replace("(", "");
+        query = query.replace(")", "");
+        query = query.replace("\"", "");
+        query = query.replace("+", "");
+        String[] queryFields = query.split("AND|OR");
+        // Number of fields as a separate field
+        instance.add((double) queryFields.length);
+      }
+      else {
+        //        LOG.info(queryPojo.getParams());
+        return null;
+      }
 
+      //    if(queryPojo.getHits() == null) {
+      //      // Log missing hits
+      //      // How critical is this? Can this ever be missing
+      //    }
+      //    else {
+      //      int hits = Integer.parseInt(queryPojo.getHits());
+      //      instance.add((double) hits);
+      //    }
+      addBitmaskBooleanFields(instance, queryPojo.getBitmask());
+      return instance.toArray(new Double[instance.size()]);
     }
-
-    output = StringUtils.join(cleaned.toArray()," ");
-
-
-    return output.replaceAll("\t"," ").replaceAll("\n"," ");
-  }
-
-
-  public static String writeValueOrEmptyString(SolrDocument doc, String fieldName){
-    if (doc.containsKey(fieldName)) {
-      if (doc.containsKey("stackTrace_s")) return cleanStackTrace(doc.getFieldValue(fieldName).toString());
-      else return doc.getFieldValue(fieldName).toString();
-
+    catch (Exception ignored){
+      //      System.out.println("$$$$$$$$$$$ EXCEPTION  "+ queryPojo.getParams());
     }
-    else return "";
+    return  null;
   }
 
+  public static void main(String[] args) throws IOException {
+    new Test().generateDataSet();
+
+  }
 
 }
