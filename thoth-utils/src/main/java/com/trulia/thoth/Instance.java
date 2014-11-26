@@ -14,29 +14,38 @@ import java.util.ArrayList;
 public class Instance {
 
   static ObjectMapper mapper = new ObjectMapper();
+
   static {
     mapper.configure(DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES, false);
   }
 
-  public static Double[] create(QueryPojo queryPojo, int slowQueryThreshold) throws IOException {
+
+  /**
+   * Create an instance
+   *
+   * @param queryPojo          query pojo
+   * @param slowQueryThreshold threshold decided to define a query fast/slow
+   * @return instance
+   * @throws IOException
+   */
+  public static Double[] create(QueryPojo queryPojo, int slowQueryThreshold, boolean isPredictionTime) throws IOException {
     ArrayList<Double> instance = new ArrayList<Double>();
-    int pos = 0;
     try {
       QuerySamplingDetails querySamplingDetails = mapper.readValue(queryPojo.getParams(), QuerySamplingDetails.class);
       QuerySamplingDetails.Details details = querySamplingDetails.getDetails();
 
-      if(queryPojo.getQtime() == null) {
-        // Handle this differently during prediction
-        return null;
-      }
-      else {
-        int qtime = Integer.parseInt(queryPojo.getQtime());
-        // --------- for classification --------------
-        if(qtime < slowQueryThreshold) {
-          instance.add(0.0);
-        }
-        else {
-          instance.add(1.0);
+      if (!isPredictionTime) {
+        // Creating instance for Model Training
+        if (queryPojo.getQtime() == null) {
+          return null;
+        } else {
+          int qtime = Integer.parseInt(queryPojo.getQtime());
+          // --------- for classification --------------
+          if (qtime < slowQueryThreshold) {
+            instance.add(0.0);
+          } else {
+            instance.add(1.0);
+          }
         }
       }
 
@@ -44,7 +53,7 @@ public class Instance {
       instance.add((double) start);
 
       String query = details.getQuery();
-      if(query != null) {
+      if (query != null) {
         query = query.replace("(", "");
         query = query.replace(")", "");
         query = query.replace("\"", "");
@@ -52,32 +61,20 @@ public class Instance {
         String[] queryFields = query.split("AND|OR");
         // Number of fields as a separate field
         instance.add((double) queryFields.length);
-      }
-      else {
-        //        LOG.info(queryPojo.getParams());
+      } else {
         return null;
       }
-
-      //    if(queryPojo.getHits() == null) {
-      //      // Log missing hits
-      //      // How critical is this? Can this ever be missing
-      //    }
-      //    else {
-      //      int hits = Integer.parseInt(queryPojo.getHits());
-      //      instance.add((double) hits);
-      //    }
       addBitmaskBooleanFields(instance, queryPojo.getBitmask());
+
       return instance.toArray(new Double[instance.size()]);
+    } catch (Exception ignored) {
     }
-    catch (Exception ignored){
-      //      System.out.println("$$$$$$$$$$$ EXCEPTION  "+ queryPojo.getParams());
-    }
-    return  null;
+    return null;
   }
 
 
   private static void addBitmaskBooleanFields(ArrayList<Double> instance, String bitmask) {
-    if(bitmask.length() != 7) {
+    if (bitmask.length() != 7) {
       System.out.println("Invalid bitmask: " + bitmask);
       return;
     }
