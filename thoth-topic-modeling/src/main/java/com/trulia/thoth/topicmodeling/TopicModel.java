@@ -1,13 +1,34 @@
 package com.trulia.thoth.topicmodeling;
 
-import cc.mallet.pipe.*;
+import cc.mallet.pipe.CharSequence2TokenSequence;
+import cc.mallet.pipe.CharSequenceLowercase;
+import cc.mallet.pipe.Pipe;
+import cc.mallet.pipe.SerialPipes;
+import cc.mallet.pipe.TokenSequence2FeatureSequence;
+import cc.mallet.pipe.TokenSequenceRemoveStopwords;
 import cc.mallet.pipe.iterator.CsvIterator;
 import cc.mallet.topics.ParallelTopicModel;
 import cc.mallet.topics.TopicInferencer;
-import cc.mallet.types.*;
+import cc.mallet.types.Alphabet;
+import cc.mallet.types.FeatureSequence;
+import cc.mallet.types.IDSorter;
+import cc.mallet.types.Instance;
+import cc.mallet.types.InstanceList;
+import cc.mallet.types.LabelSequence;
 
-import java.io.*;
-import java.util.*;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.util.ArrayList;
+import java.util.Formatter;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Locale;
+import java.util.TreeSet;
 import java.util.regex.Pattern;
 
 /**
