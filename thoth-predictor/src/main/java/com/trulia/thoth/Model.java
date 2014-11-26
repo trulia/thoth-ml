@@ -213,7 +213,7 @@ public class Model {
 
   /**
    * Generate datasets
-   * @throws IOException
+   * @throws java.io.IOException
    */
   public void generateDataSet() throws IOException {
     LOG.info("Generating dataset ...");
@@ -276,7 +276,7 @@ public class Model {
    * Exports dataset to file
    * @param dataset ArrayList of double arrays
    * @param path of the file that needs to be stored
-   * @throws IOException
+   * @throws java.io.IOException
    */
   private void exportDataset(ArrayList<Double[]> dataset, String path) throws IOException {
     if (dataset == null) {
@@ -315,7 +315,7 @@ public class Model {
   /**
    * Method helper to spawn the H2o Cloud
    * @param args
-   * @throws IOException
+   * @throws java.io.IOException
    */
   public static void main(String[] args) throws IOException {
     H2O.main(new String[]{"-name", H2O_CLOUD_NAME, "-md5skip", "-Xmx4g"});

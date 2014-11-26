@@ -105,7 +105,7 @@ public class Test {
    * Exports dataset to file
    * @param dataset ArrayList of double arrays
    * @param path of the file that needs to be stored
-   * @throws IOException
+   * @throws java.io.IOException
    */
   private void exportDataset(ArrayList<Double[]> dataset, String path) throws IOException {
     if (dataset == null) {
