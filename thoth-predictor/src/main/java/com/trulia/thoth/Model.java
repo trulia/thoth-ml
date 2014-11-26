@@ -152,8 +152,7 @@ public class Model {
     while ((line=br.readLine()) != null) {
       String[] splitLine = line.split("\t");
       if (splitLine.length != 7) continue; //TODO: too specific, need to make it generic
-      Double[] instance = null;
-      instance = Instance.create(getQueryPojoFromSplitLine(splitLine), slowQueryThreshold);
+      Double[] instance = Instance.create(getQueryPojoFromSplitLine(splitLine), slowQueryThreshold, false);
       if(instance == null) continue;
 
       System.out.println("instance " + ArrayUtils.toString(instance));
