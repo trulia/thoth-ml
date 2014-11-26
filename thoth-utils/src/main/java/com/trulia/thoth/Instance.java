@@ -89,4 +89,13 @@ public class Instance {
   }
 
 
+  public static QueryPojo getQueryPojoFromSplitLine(String[] fields){
+    QueryPojo queryPojo = new QueryPojo();
+    queryPojo.setParams(fields[3]);
+    if (!fields[4].isEmpty()) queryPojo.setQtime(fields[4]);
+    if (!fields[5].isEmpty()) queryPojo.setHits(fields[5]);
+    queryPojo.setBitmask(fields[6]);
+    return queryPojo;
+  }
+
 }

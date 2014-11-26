@@ -1,6 +1,5 @@
 package com.trulia.thoth;
 
-import com.trulia.thoth.pojo.QueryPojo;
 import com.trulia.thoth.util.Utils;
 import hex.gbm.GBM;
 import org.apache.commons.lang3.ArrayUtils;
@@ -45,19 +44,6 @@ public class Model {
   @Value("${model.location}")
   private String modelLocation;
 
-
-
-
-
-
-  private static QueryPojo getQueryPojoFromSplitLine(String[] fields){
-    QueryPojo queryPojo = new QueryPojo();
-    queryPojo.setParams(fields[3]);
-    if (!fields[4].isEmpty()) queryPojo.setQtime(fields[4]);
-    if (!fields[5].isEmpty()) queryPojo.setHits(fields[5]);
-    queryPojo.setBitmask(fields[6]);
-    return queryPojo;
-  }
 
   @PostConstruct
   public void init() {
@@ -152,7 +138,7 @@ public class Model {
     while ((line=br.readLine()) != null) {
       String[] splitLine = line.split("\t");
       if (splitLine.length != 7) continue; //TODO: too specific, need to make it generic
-      Double[] instance = Instance.create(getQueryPojoFromSplitLine(splitLine), slowQueryThreshold, false);
+      Double[] instance = Instance.create(Instance.getQueryPojoFromSplitLine(splitLine), slowQueryThreshold, false);
       if(instance == null) continue;
 
       System.out.println("instance " + ArrayUtils.toString(instance));
