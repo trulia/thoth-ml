@@ -88,6 +88,7 @@ import java.io.InputStream;
   else if (TRAIN_MODEL_ACTION.equals(action)){
     model.generateDataSet();
     model.trainModel();
+
     drStaticModelHealth.resetCounters();
     googleStaticModelHealth.resetCounters();
     mobileStaticModelHealth.resetCounters();

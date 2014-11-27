@@ -107,8 +107,8 @@ public class Model {
    * @return
    */
   public String trainModel() throws Exception {
-    LOG.info("Training new model ...");
     String tempVersion = generateNewVersion();
+    LOG.info("Training new model... new model will have version("+tempVersion+")");
     trainAndStoreModel(tempVersion);
     setNewVersion(tempVersion);
     return version;
@@ -122,43 +122,51 @@ public class Model {
     return null;
   }
 
+
   /**
-   * Generate datasets
+   * Export the data sets to disk so a model can be train on those
+   * @param testDataSet array list of test instances
+   * @param trainDataSet array list of train instances
+   * @throws IOException
+   */
+  private void exportDataSets(ArrayList<Double[]> testDataSet, ArrayList<Double[]> trainDataSet) throws IOException {
+    // Export train and test datasets
+    exportDataset(testDataSet, exportedTrainDataset);
+    exportDataset(trainDataSet, exportedTestDataset);
+    LOG.info("Training set size(" + trainDataSet.size()+") exported in " + exportedTrainDataset);
+    LOG.info("Test set size(" + testDataSet.size()+") exported in " + exportedTestDataset);
+  }
+
+
+
+  /**
+   * Generate and export train and test data sets
    * @throws java.io.IOException
    */
   public void generateDataSet() throws IOException {
-    LOG.info("Generating dataset ...");
-    // Get file that contains Thoth sample data
+    LOG.info("Generating Data sets ...");
+    // Retrieve file that contains Thoth sample data
     BufferedReader br = new BufferedReader(new FileReader(Utils.getThothSampledFileName(mergeDirectory)));
-    // Training and Test datasets
+
+    // Prepare Training and Test data set
     ArrayList<Double[]> train = new ArrayList<Double[]>();
     ArrayList<Double[]> test = new ArrayList<Double[]>();
 
     String line;
     while ((line=br.readLine()) != null) {
-      String[] splitLine = line.split("\t");
-      if (splitLine.length != 7) continue; //TODO: too specific, need to make it generic
-      Double[] instance = Instance.create(Instance.getQueryPojoFromSplitLine(splitLine), slowQueryThreshold, false);
-      if(instance == null) continue;
-
-      System.out.println("instance " + ArrayUtils.toString(instance));
+      Double[] instance = Instance.create(Converter.tsvToQueryPojo(line), slowQueryThreshold, false);
+      if (instance == null) continue; // invalid instance, skipping
+      LOG.info("Instance " + ArrayUtils.toString(instance));
 
       // Separate into training and test
-      int next = random.nextInt(100);
-      if (next >= 70) {
+      if (random.nextInt(100) >= 70) {
         test.add(instance);
       }
       else {
         train.add(instance);
       }
     }
-
-    // Export train and test datasets
-    exportDataset(train, exportedTrainDataset);
-    exportDataset(test, exportedTestDataset);
-    LOG.info("Training set size: " + train.size());
-    LOG.info("Test set size: " + test.size());
-
+    exportDataSets(test,train);
   }
 
 
@@ -217,28 +225,22 @@ public class Model {
     Key fkey1 = NFSFileVec.make(trainedDataSetFile);
     Key dest1 = Key.make("thoth-train.hex");
 
-    //TODO: do we still need the test dataset?
-    //TODO: bring back old code
     File file2 = new File(args[1]);
     Key fkey2 = NFSFileVec.make(file2);
     Key dest2 = Key.make("thoth-test.hex");
     Frame ftest = ParseDataset2.parse(dest2, new Key[]{fkey2});
-
 
     GBM gbm = new GBM();
     gbm.source = ParseDataset2.parse(dest1, new Key[]{fkey1});
     gbm.response = new PrepData() { @Override
                                     Vec prep(Frame fr) { return fr.vecs()[0]; } }.prep(gbm.source);
     gbm.ntrees = 1000;
-    //    gbm.max_depth = 3;
-    gbm.balance_classes = true;
+    gbm.balance_classes = false;
     gbm.learn_rate = 0.1f;
     gbm.min_rows = 10;
     gbm.nbins = 20;
     gbm.cols =  new int[] {1,2,3,4,5,6,7,8,9};
     gbm.validation = ftest;
-
-
     gbm.invoke();
     GBM.GBMModel model = UKV.get(gbm.dest());
 
@@ -254,14 +256,6 @@ public class Model {
     AUCData aucData = auc.data();
     aucData.threshold_criterion = AUC.ThresholdCriterion.maximum_F1;
     double threshold = aucData.threshold();
-    //System.out.println(threshold);
-    //aucData.threshold_criterion = AUC.ThresholdCriterion.maximum_Accuracy;
-    //threshold = aucData.threshold();
-    //System.out.println(threshold);
-    //aucData.threshold_criterion = AUC.ThresholdCriterion.minimizing_max_per_class_Error;
-    //threshold = aucData.threshold();
-    //System.out.println(threshold);
-
     // Model serialization
     File modelFile = new File(args[2] + "/gbm_model_v" + args[3]);
     new Model2FileBinarySerializer().save(model, modelFile);
