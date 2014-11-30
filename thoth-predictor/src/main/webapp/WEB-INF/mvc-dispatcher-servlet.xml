@@ -31,6 +31,7 @@
     <bean id="mobileStaticModelHealth" class="com.trulia.thoth.predictor.StaticModelHealth"/>
     <bean id="userStaticModelHealth" class="com.trulia.thoth.predictor.StaticModelHealth"/>
 
+    <!-- Sampling thoth data from Thoth index -->
     <bean id="sampler" class="com.trulia.thoth.quartz.Scheduler" init-method="init">
         <property name="samplingEnabled" value="${thoth.sampling.enabled}"/>
         <property name="samplingDir" value="${thoth.sampling.dir}"/>

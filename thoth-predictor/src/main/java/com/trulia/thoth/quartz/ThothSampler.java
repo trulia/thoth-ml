@@ -76,12 +76,9 @@ public class ThothSampler implements Job {
       StaticModelHealth mobileStaticModelHealth = (StaticModelHealth)schedulerContext.get("mobileStaticModelHealth");
       StaticModelHealth googleStaticModelHealth = (StaticModelHealth)schedulerContext.get("googleStaticModelHealth");
 
-
-      //TODO: fix
       serversDetail = thothServers.getList(thothIndex);
 
-
-
+      //TODO: still need ignored servers?
       ignored  = new ArrayList<ServerDetail>();
       ignored.add(new ServerDetail("search200", "user","8050","active"));
       ignored.add(new ServerDetail("search228", "user","8050","active"));
@@ -95,35 +92,13 @@ public class ThothSampler implements Job {
       ignored.add(new ServerDetail("search252", "user","8050","active"));
       ignored.add(new ServerDetail("search253", "user","8050","active"));
 
-
-      //serversDetail = new ArrayList<ServerDetail>();
-      //serversDetail.add(new ServerDetail("search213", "user", "8050", "active"));
-      //serversDetail.add(new ServerDetail("search204", "user", "8050", "active"));
-      //serversDetail.add(new ServerDetail("search205", "user", "8050", "active"));
-      //serversDetail.add(new ServerDetail("search222", "user", "8050", "active"));
-      //serversDetail.add(new ServerDetail("search38", "user", "8050", "active"));
-      //serversDetail.add(new ServerDetail("search37", "user", "8050", "active"));
-      //serversDetail.add(new ServerDetail("search256", "user", "8050", "active"));
-      //serversDetail.add(new ServerDetail("search257", "user", "8050", "active"));
-      //serversDetail.add(new ServerDetail("search258", "user", "8050", "active"));
-      //serversDetail.add(new ServerDetail("search259", "user", "8050", "active"));
-      //serversDetail.add(new ServerDetail("search222", "user", "8050", "active"));
-      //serversDetail.add(new ServerDetail("search25", "user", "8050", "active"));
-      //serversDetail.add(new ServerDetail("search26", "user", "8050", "active"));
-      //serversDetail.add(new ServerDetail("search226", "user", "8050", "active"));
-      //serversDetail.add(new ServerDetail("search20", "user", "8050", "active"));
-      //serversDetail.add(new ServerDetail("search246", "user", "8050", "active"));
-      //serversDetail.add(new ServerDetail("search247", "user", "8050", "active"));
-      //
-
-
+      //TODO: why 10?
       ExecutorService service = Executors.newFixedThreadPool(10);
       futureList = new ArrayList<Future>();
       CompletionService<String> ser = new ExecutorCompletionService<String>(service);
 
       File dir = new File(samplingDirectory);
       new File(mergeDirectory).mkdirs();
-
       boolean success = (dir).mkdirs();
       if (success || dir.exists() ) {
 

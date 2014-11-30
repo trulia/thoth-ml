@@ -26,7 +26,7 @@ public class Scheduler {
 
   public void init() throws SchedulerException {
     if (samplingEnabled){
-      System.out.println("Sampling enabled.");
+      System.out.println("Thoth sampling enabled.");
 
       // Quartz Setup for resetting
       JobDetail workerJob = JobBuilder.newJob(ThothSampler.class)
