@@ -7,7 +7,7 @@ import java.util.Date;
 /**
  * User: dbraga - Date: 10/4/14
  */
-public class Utils {
+public class SamplerUtils {
 
   public static String getThothSampledFileName(String mergeDirectory){
     DateFormat dateFormat = new SimpleDateFormat("yyyy_MM_dd");

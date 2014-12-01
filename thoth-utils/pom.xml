@@ -12,4 +12,11 @@
     <artifactId>thoth-utils</artifactId>
 
 
+    <dependencies>
+        <dependency>
+            <groupId>com.trulia.thoth</groupId>
+            <artifactId>thoth-core</artifactId>
+            <version>1.3-SNAPSHOT</version>
+        </dependency>
+    </dependencies>
 </project>
