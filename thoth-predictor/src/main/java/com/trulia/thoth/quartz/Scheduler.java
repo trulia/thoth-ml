@@ -23,6 +23,7 @@ public class Scheduler {
   private StaticModelHealth googleStaticModelHealth;
   private StaticModelHealth mobileStaticModelHealth;
   private StaticModelHealth userStaticModelHealth;
+  private int lineCountLimit;
 
   public void init() throws SchedulerException {
     if (samplingEnabled){
@@ -43,6 +44,7 @@ public class Scheduler {
       scheduler.start();
       scheduler.getContext().put("samplingDir", samplingDir);
       scheduler.getContext().put("mergingDir", mergingDir);
+      scheduler.getContext().put("lineCountLimit", lineCountLimit);
       scheduler.getContext().put("thothIndex",thothIndex);
       scheduler.getContext().put("modelHealth",modelHealth);
 
@@ -146,5 +148,13 @@ public class Scheduler {
 
   public StaticModelHealth getUserStaticModelHealth() {
     return userStaticModelHealth;
+  }
+
+  public void setLineCountLimit(int lineCountLimit) {
+    this.lineCountLimit = lineCountLimit;
+  }
+
+  public int getLineCountLimit() {
+    return lineCountLimit;
   }
 }
