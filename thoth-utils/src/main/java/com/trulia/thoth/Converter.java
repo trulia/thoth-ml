@@ -2,6 +2,8 @@ package com.trulia.thoth;
 
 import com.trulia.thoth.pojo.QueryPojo;
 import com.trulia.thoth.pojo.QuerySamplingDetails;
+import com.trulia.thoth.requestdocuments.MessageRequestDocument;
+import com.trulia.thoth.requestdocuments.SolrQueryRequestDocument;
 import org.apache.solr.common.SolrDocument;
 import org.codehaus.jackson.map.ObjectMapper;
 
@@ -13,7 +15,7 @@ import java.util.regex.Pattern;
  * User: dbraga - Date: 11/27/14
  */
 public class Converter {
-  private static final String[] samplingFields = { "hostname_s", "pool_s", "source_s", "params_s", "qtime_i", "hits_i", "bitmask_s"};
+  private static final String[] samplingFields = { MessageRequestDocument.HOSTNAME, MessageRequestDocument.CORENAME, MessageRequestDocument.SOURCE, SolrQueryRequestDocument.PARAMS, SolrQueryRequestDocument.QTIME, SolrQueryRequestDocument.HITS, SolrQueryRequestDocument.BITMASK};
   private static final Pattern FACET_PATTERN = Pattern.compile("facet=true");
 
   private static Pattern RANGE_QUERY_PATTERN = Pattern.compile("\\w*:\\[(.*?TO.*?)\\]");
@@ -41,38 +43,65 @@ public class Converter {
     return queryPojo;
   }
 
+  /**
+   * Get value from field of a thoth doc
+   * @param doc thoth document
+   * @param fieldName name of the field
+   * @return value or empty string
+   */
   public static String writeValueOrEmptyString(SolrDocument doc, String fieldName){
     if (doc.containsKey(fieldName)) return doc.getFieldValue(fieldName).toString();
     else return "";
   }
 
-  private static boolean checkForMatch(Pattern pattern, String query){
-    Matcher matcher = pattern.matcher(query);
+  /**
+   * Pattern match against line
+   * @param pattern pattern to check
+   * @param line to check against
+   * @return true if pattern matched, false otherwise
+   */
+  private static boolean checkForMatch(Pattern pattern, String line){
+    Matcher matcher = pattern.matcher(line);
     if (matcher.find()) return true;
     else return false;
   }
 
+  /**
+   * Represent important part of a thoth document into a tab separated value line
+   * @param doc thoth document
+   * @param mapper jackson mapper
+   * @return tsv line
+   * @throws IOException
+   */
   public static String thothDocToTsv(SolrDocument doc, ObjectMapper mapper) throws IOException {
     String tsvLine = "";
-
     for (String fieldName: samplingFields){
-
-      if ("params_s".equals(fieldName)){
+      if (fieldName.equals(SolrQueryRequestDocument.PARAMS)){
         String extractedDetails = extractDetailsFromParams(writeValueOrEmptyString(doc, fieldName), mapper);
         if (!"".equals(extractedDetails)) tsvLine += extractedDetails;
       } else {
         tsvLine += writeValueOrEmptyString(doc,fieldName);
       }
       tsvLine += "\t";
-
     }
     tsvLine += "\n";
     return tsvLine;
   }
 
+  /**
+   * Transform a params string to a params array
+   * @param params string representation of params
+   * @return array of params
+   */
+  private static String[] getParamsArray(String params){
+    return params.replaceAll("\\{","").replaceAll("\\}", "").split("&");
+  }
+
+
+  //TODO: refactor better and move
   public static String extractDetailsFromParams(String params, ObjectMapper mapper) throws IOException {
-    String[] splitted = params.replaceAll("\\{","").replaceAll("\\}", "").split("&");
-    if (splitted.length < 1) return "";
+    String[] split = getParamsArray(params);
+    if (split.length < 1) return "";
 
     QuerySamplingDetails querySamplingDetails = new QuerySamplingDetails();
 
@@ -86,9 +115,10 @@ public class Converter {
     features.setRangeQuery(checkForMatch(RANGE_QUERY_PATTERN, params));
 
 
-    for (String s : splitted){
+    for (String s : split){
       if ("".equals(s)) continue;
       String[] elements = s.split("=");
+
       if (elements.length == 2) {
         String k = elements[0];
         String v = elements[1];
@@ -117,11 +147,8 @@ public class Converter {
       else System.out.println("Not recognized k,v element. from " + s);
     }
 
-
-
     querySamplingDetails.setDetails(details);
     querySamplingDetails.setFeatures(features);
-    //System.out.println("JSON: " + mapper.writeValueAsString(querySamplingDetails));
     return mapper.writeValueAsString(querySamplingDetails);
 
   }

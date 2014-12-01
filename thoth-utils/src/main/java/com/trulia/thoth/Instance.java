@@ -23,7 +23,7 @@ public class Instance {
   /**
    * Create an instance
    *
-   * @param queryPojo          query pojo
+   * @param queryPojo query pojo
    * @param slowQueryThreshold threshold decided to define a query fast/slow
    * @return instance
    * @throws IOException
