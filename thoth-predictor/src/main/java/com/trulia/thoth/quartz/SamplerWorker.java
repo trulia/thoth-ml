@@ -7,9 +7,7 @@ import com.trulia.thoth.predictor.StaticModelHealth;
 import com.trulia.thoth.requestdocuments.MessageRequestDocument;
 import com.trulia.thoth.util.Utils;
 import org.apache.solr.client.solrj.SolrQuery;
-import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
-import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -196,21 +194,4 @@ public class SamplerWorker implements Callable<String>{
     return "done";
   }
 
-  public static void main(String[] args) throws IOException, SolrServerException {
-//    String params = "q={!spatial circles=33.6942,-112.033,1}(asmtBuildingArea_i:[ 2000 TO * ] ) AND (latitude_f:[ 33.27584 TO 34.06266 ]) AND (longitude_f:[ -112.32953 TO -111.91321 ])&sort=lastSaleDate_s desc&ghl=9w0sn3wx9c7-9mzg4bbgesf&fq=propertyId_s:[* TO *]&fq=lastSaleDate_s:[\"2013-10-09\" TO *]&fq=lastSalePrice_i:[1 TO *]&version=2.2&start=15&rows=15&cachebust=NOVERSION&wt=json&slowpool=1";
-    ObjectMapper om  = new ObjectMapper();
-    SamplerWorker samplerWorker = new SamplerWorker(new ServerDetail("search501","bot","8050","active"),"", om, new HttpSolrServer("http://thoth:8983/solr/collection1"), null, null, null,null,null);
-//    System.out.println(samplerWorker.extractDetailsFromParams(params));
-    HttpSolrServer solrServer = new HttpSolrServer("http://thoth.sv2.trulia.com:8983/solr/");
-//    solrServer.query(getSamplingSolrQuery());
-
-    QueryResponse qr = solrServer.query(samplerWorker.getSamplingSolrQuery());
-    SolrDocumentList solrDocumentList = qr.getResults();
-    for (SolrDocument doc: solrDocumentList) {
-
-      System.out.println(Converter.thothDocToTsv(doc, om));
-
-    }
-
-  }
 }
