@@ -38,6 +38,7 @@
         <property name="mergingDir" value="${thoth.merging.dir}"/>
         <property name="lineCountLimit" value="${thoth.merging.maxLineCount}"/>
         <property name="thothIndex" value="${thoth.index.url}"/>
+        <property name="ignoredServers" value="${thoth.sampling.ignored.servers}"/>
         <property name="schedule" value="${thoth.sampling.schedule}"/>
         <property name="modelHealth" ref="modelHealth"/>
         <!--//TODO: To remove ASAP  - BEST-1377-->

@@ -2,6 +2,7 @@ package com.trulia.thoth.quartz;
 
 import com.trulia.thoth.predictor.ModelHealth;
 import com.trulia.thoth.predictor.StaticModelHealth;
+import org.apache.log4j.Logger;
 import org.quartz.*;
 import org.quartz.impl.StdSchedulerFactory;
 
@@ -9,6 +10,7 @@ import org.quartz.impl.StdSchedulerFactory;
  * User: dbraga - Date: 7/21/14
  */
 public class Scheduler {
+  private static final Logger LOG = Logger.getLogger(Scheduler.class);
 
   private boolean samplingEnabled;
   private String samplingDir;
@@ -24,10 +26,11 @@ public class Scheduler {
   private StaticModelHealth mobileStaticModelHealth;
   private StaticModelHealth userStaticModelHealth;
   private int lineCountLimit;
+  private String ignoredServers;
 
   public void init() throws SchedulerException {
     if (samplingEnabled){
-      System.out.println("Thoth sampling enabled.");
+      LOG.info("Thoth sampling enabled.");
 
       // Quartz Setup for resetting
       JobDetail workerJob = JobBuilder.newJob(ThothSampler.class)
@@ -45,6 +48,7 @@ public class Scheduler {
       scheduler.getContext().put("samplingDir", samplingDir);
       scheduler.getContext().put("mergingDir", mergingDir);
       scheduler.getContext().put("lineCountLimit", lineCountLimit);
+      scheduler.getContext().put("ignoredServers", ignoredServers);
       scheduler.getContext().put("thothIndex",thothIndex);
       scheduler.getContext().put("modelHealth",modelHealth);
 
@@ -56,7 +60,7 @@ public class Scheduler {
 
       scheduler.scheduleJob(workerJob, workerTrigger);
     } else {
-      System.out.println("Sampling disabled. Skipping.");
+      LOG.info("Sampling disabled. Skipping.");
     }
   }
 
@@ -156,5 +160,13 @@ public class Scheduler {
 
   public int getLineCountLimit() {
     return lineCountLimit;
+  }
+
+  public void setIgnoredServers(String ignoredServers) {
+    this.ignoredServers = ignoredServers;
+  }
+
+  public String getIgnoredServers() {
+    return ignoredServers;
   }
 }
