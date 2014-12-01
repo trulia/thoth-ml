@@ -1,9 +1,10 @@
 package com.trulia.thoth.quartz;
 
+import com.trulia.thoth.MergeUtils;
 import com.trulia.thoth.pojo.ServerDetail;
 import com.trulia.thoth.predictor.ModelHealth;
 import com.trulia.thoth.predictor.StaticModelHealth;
-import com.trulia.thoth.MergeUtils;
+import com.trulia.thoth.util.IgnoredServers;
 import com.trulia.thoth.util.ThothServers;
 import org.apache.log4j.Logger;
 import org.apache.solr.client.solrj.SolrServerException;
@@ -30,6 +31,7 @@ public class ThothSampler implements Job {
   private String samplingDirectory;
   private ObjectMapper mapper;
   private int lineCountLimit;
+  private String ignoredServersList;
 
 
   public ArrayList<File> filesinDir(String directoryName){
@@ -43,18 +45,6 @@ public class ThothSampler implements Job {
       }
     }
     return filelist;
-  }
-
-  private boolean isIgnored(ServerDetail serverDetail){
-    for (ServerDetail toCheck: ignored){
-      if ((toCheck.getName().equals(serverDetail.getName())) &&
-          (toCheck.getCore().equals(serverDetail.getCore())) &&
-          (toCheck.getPool().equals(serverDetail.getPool())) &&
-          (toCheck.getPort().equals(serverDetail.getPort()))){
-        return true;
-      }
-    }
-    return false;
   }
 
   /**
@@ -79,6 +69,7 @@ public class ThothSampler implements Job {
       mergeDirectory = (String)schedulerContext.get("mergingDir");
       samplingDirectory = (String)schedulerContext.get("samplingDir");
       lineCountLimit = (Integer)schedulerContext.get("lineCountLimit");
+      ignoredServersList = (String)schedulerContext.get("ignoredServersList");
 
       ModelHealth modelHealth = (ModelHealth)schedulerContext.get("modelHealth");
       HttpSolrServer thothIndex = new HttpSolrServer((String)schedulerContext.get("thothIndex"));
@@ -91,20 +82,8 @@ public class ThothSampler implements Job {
       StaticModelHealth googleStaticModelHealth = (StaticModelHealth)schedulerContext.get("googleStaticModelHealth");
 
       serversDetail = thothServers.getList(thothIndex);
-
-      //TODO: still need ignored servers?
-      ignored  = new ArrayList<ServerDetail>();
-//      ignored.add(new ServerDetail("search200", "user","8050","active"));
-//      ignored.add(new ServerDetail("search228", "user","8050","active"));
-//      ignored.add(new ServerDetail("search254", "user","8050","active"));
-//      ignored.add(new ServerDetail("search255", "user","8050","active"));
-//      ignored.add(new ServerDetail("search39", "user","8050","active"));
-//
-//      ignored.add(new ServerDetail("search42", "user","8050","active"));
-//      ignored.add(new ServerDetail("search43", "user","8050","active"));
-//      ignored.add(new ServerDetail("search44", "user","8050","active"));
-//      ignored.add(new ServerDetail("search252", "user","8050","active"));
-//      ignored.add(new ServerDetail("search253", "user","8050","active"));
+      IgnoredServers ignoredServers = new IgnoredServers(ignoredServersList);
+      ignored = ignoredServers.getIgnoredServersDetail();
 
       //TODO: why 10?
       ExecutorService service = Executors.newFixedThreadPool(10);
@@ -118,7 +97,7 @@ public class ThothSampler implements Job {
 
         for (ServerDetail server: serversDetail){
 
-          if (isIgnored(server)) continue;
+          if (ignoredServers.isServerIgnored(server)) continue;
 
           try {
             Future<String> future = ser.submit(new SamplerWorker(
