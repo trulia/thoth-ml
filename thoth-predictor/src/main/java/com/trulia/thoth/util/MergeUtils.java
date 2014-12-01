@@ -10,11 +10,17 @@ import java.util.ArrayList;
  * User: dbraga - Date: 11/30/14
  */
 public class MergeUtils {
+  public static final String MERGED_FILE_NAME = "merged";
+
+
   private String mergeFile;
   private String dirToMerge;
   private CircularFifoBuffer fifo;
   private static final Logger LOG = Logger.getLogger(MergeUtils.class);
 
+  public static String getMergeFile(String mergeDirectory){
+    return mergeDirectory +  MergeUtils.MERGED_FILE_NAME;
+  }
 
   /**
    * Helper to merge multiple files to single file that works as a FIFO buffer

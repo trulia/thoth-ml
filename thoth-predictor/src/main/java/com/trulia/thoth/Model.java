@@ -1,6 +1,6 @@
 package com.trulia.thoth;
 
-import com.trulia.thoth.util.SamplerUtils;
+import com.trulia.thoth.util.MergeUtils;
 import hex.gbm.GBM;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.log4j.Logger;
@@ -146,7 +146,7 @@ public class Model {
   public void generateDataSet() throws IOException {
     LOG.info("Generating Data sets ...");
     // Retrieve file that contains Thoth sample data
-    BufferedReader br = new BufferedReader(new FileReader(SamplerUtils.getThothSampledFileName(mergeDirectory)));
+    BufferedReader br = new BufferedReader(new FileReader(MergeUtils.getMergeFile(mergeDirectory)));
 
     // Prepare Training and Test data set
     ArrayList<Double[]> train = new ArrayList<Double[]>();

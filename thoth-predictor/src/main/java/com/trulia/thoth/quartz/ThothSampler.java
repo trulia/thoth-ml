@@ -14,10 +14,7 @@ import org.quartz.*;
 
 import java.io.File;
 import java.io.IOException;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.*;
 
@@ -65,10 +62,7 @@ public class ThothSampler implements Job {
    */
   private void mergeSamplingFiles(){
     try {
-      DateFormat dateFormat = new SimpleDateFormat("yyyy_MM_dd");
-      Date date = new Date();
-      String mergeFile = mergeDirectory +  dateFormat.format(date)+"_merged";
-      new MergeUtils(mergeFile, samplingDirectory, lineCountLimit).merge();
+      new MergeUtils(MergeUtils.getMergeFile(mergeDirectory), samplingDirectory, lineCountLimit).merge();
       LOG.info("Merge complete.");
     } catch (IOException e) {
       e.printStackTrace();
@@ -154,10 +148,6 @@ public class ThothSampler implements Job {
             e.printStackTrace();
           }
         }
-
-
-
-
 
         LOG.info("Done Sampling. Merging single files into one");
         mergeSamplingFiles();
