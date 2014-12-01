@@ -4,6 +4,8 @@ import com.trulia.thoth.Converter;
 import com.trulia.thoth.pojo.ServerDetail;
 import com.trulia.thoth.predictor.ModelHealth;
 import com.trulia.thoth.predictor.StaticModelHealth;
+import com.trulia.thoth.requestdocuments.MessageRequestDocument;
+import com.trulia.thoth.util.Utils;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
@@ -32,6 +34,9 @@ public class SamplerWorker implements Callable<String>{
   private HttpSolrServer thothIndex;
   private ObjectMapper mapper;
   private String fileName;
+  private static final int TOT_SAMPLE_COUNT = 100;
+  private static final int RANDOM_SAMPLE_COUNT = TOT_SAMPLE_COUNT;
+
 
   private ModelHealth modelHealth;
 
@@ -40,6 +45,10 @@ public class SamplerWorker implements Callable<String>{
   private StaticModelHealth mobileStaticModelHealth;
   private StaticModelHealth drStaticModelHealth;
   private StaticModelHealth googleStaticModelHealth;
+
+  //TODO: move
+  private static final String EXCEPTION = "exception_b";
+
   // DR1 : search501
   private static final String DR1_HOSTNAME = "search501";
   // Google: search213
@@ -121,13 +130,16 @@ public class SamplerWorker implements Callable<String>{
    */
   private SolrQuery getSamplingSolrQuery(){
     // TODO: use same technique used in thoth core
-    SolrQuery samplingSolrQuery = new SolrQuery("hostname_s:"+hostname
-        +" AND port_i:"+port
-        +" AND pool_s:"+pool
-        +" AND coreName_s:"+core
-        +" AND NOT exception_b:true AND NOT source_s:WatchingRequest" );
+    SolrQuery samplingSolrQuery = new SolrQuery(
+          Utils.createFieldValueQuery(MessageRequestDocument.HOSTNAME, hostname) +
+          " AND " + Utils.createFieldValueQuery(MessageRequestDocument.PORT, port) +
+          " AND " + Utils.createFieldValueQuery(MessageRequestDocument.POOL, pool) +
+          " AND " + Utils.createFieldValueQuery(MessageRequestDocument.CORENAME, core) +
+          " AND NOT " + Utils.createFieldValueQuery(MessageRequestDocument.SOURCE, "WatchingRequest") +
+          " AND NOT " + Utils.createFieldValueQuery(EXCEPTION, "true")
+    );
     samplingSolrQuery.setSort(new SolrQuery.SortClause("timestamp_dt", SolrQuery.ORDER.desc));
-    samplingSolrQuery.setRows(2);  // Returning 100 docs
+    samplingSolrQuery.setRows(TOT_SAMPLE_COUNT);  // Returning TOT_SAMPLE_COUNT docs
     return samplingSolrQuery;
   }
 
@@ -169,14 +181,12 @@ public class SamplerWorker implements Callable<String>{
   @Override
   public String call() throws Exception {
     SolrDocumentList sampleOfThothDocs = thothIndex.query(getSamplingSolrQuery()).getResults();
-
     if (sampleOfThothDocs.size() < 1){
       System.out.println("ERROR: hostname: " + hostname+" returned 0 results. Skipping sampling" );
       closeFileWriter();
       return "skipped";
     }
-
-    List<SolrDocument> randomSample = randomSample(sampleOfThothDocs, 100);
+    List<SolrDocument> randomSample = randomSample(sampleOfThothDocs, RANDOM_SAMPLE_COUNT);
     for (SolrDocument doc: randomSample){
       //TODO: refactor this
       updateHealthScores(doc);
