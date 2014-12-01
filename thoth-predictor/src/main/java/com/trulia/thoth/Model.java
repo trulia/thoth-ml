@@ -1,6 +1,5 @@
 package com.trulia.thoth;
 
-import com.trulia.thoth.util.MergeUtils;
 import hex.gbm.GBM;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.log4j.Logger;

@@ -3,7 +3,7 @@ package com.trulia.thoth.quartz;
 import com.trulia.thoth.pojo.ServerDetail;
 import com.trulia.thoth.predictor.ModelHealth;
 import com.trulia.thoth.predictor.StaticModelHealth;
-import com.trulia.thoth.util.MergeUtils;
+import com.trulia.thoth.MergeUtils;
 import com.trulia.thoth.util.ThothServers;
 import org.apache.log4j.Logger;
 import org.apache.solr.client.solrj.SolrServerException;

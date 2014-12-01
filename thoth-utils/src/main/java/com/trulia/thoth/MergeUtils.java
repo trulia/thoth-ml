@@ -1,8 +1,7 @@
-package com.trulia.thoth.util;
+package com.trulia.thoth;
 
 import org.apache.commons.collections.buffer.CircularFifoBuffer;
 import org.apache.log4j.Logger;
-
 import java.io.*;
 import java.util.ArrayList;
 
@@ -18,6 +17,11 @@ public class MergeUtils {
   private CircularFifoBuffer fifo;
   private static final Logger LOG = Logger.getLogger(MergeUtils.class);
 
+  /**
+   * Retrieve full path + name of the merged file
+   * @param mergeDirectory directory of the merged file
+   * @return file name
+   */
   public static String getMergeFile(String mergeDirectory){
     return mergeDirectory +  MergeUtils.MERGED_FILE_NAME;
   }
