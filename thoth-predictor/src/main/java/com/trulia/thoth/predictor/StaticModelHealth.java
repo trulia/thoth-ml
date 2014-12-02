@@ -14,6 +14,8 @@ public class StaticModelHealth {
   private int truePositive;
   private int trueNegative;
 
+  private static final int MAX_SAMPLE_COUNT = Integer.MAX_VALUE / 2;
+
   public float getAvgPerClassError() {
     float score = ((1.0f* falseNegative)/(falseNegative + truePositive) + (1.0f * falsePositive)/(falsePositive+trueNegative))/2;
     if (Float.isNaN(score)) return 0.0f;
@@ -82,6 +84,19 @@ public class StaticModelHealth {
     falseNegative = 0 ;
     truePositive = 0;
     trueNegative = 0;
+  }
+
+  // SampleWorker should call this method periodically
+  // Probably makes more sense than executing on every increment
+
+  private void checkCountOverflow() {
+    if(truePositive >= MAX_SAMPLE_COUNT || trueNegative >= MAX_SAMPLE_COUNT || falsePositive >= MAX_SAMPLE_COUNT
+      || falseNegative >= MAX_SAMPLE_COUNT) {
+      truePositive /= 2;
+      trueNegative /= 2;
+      falsePositive /= 2;
+      falseNegative /= 2;
+    }
   }
 
 
