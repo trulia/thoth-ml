@@ -4,7 +4,6 @@ import com.trulia.thoth.MergeUtils;
 import com.trulia.thoth.pojo.ServerDetail;
 import com.trulia.thoth.predictor.ModelHealth;
 import com.trulia.thoth.predictor.StaticModelHealth;
-import com.trulia.thoth.util.IgnoredServers;
 import com.trulia.thoth.util.ThothServers;
 import org.apache.log4j.Logger;
 import org.apache.solr.client.solrj.SolrServerException;
@@ -82,8 +81,9 @@ public class ThothSampler implements Job {
       StaticModelHealth googleStaticModelHealth = (StaticModelHealth)schedulerContext.get("googleStaticModelHealth");
 
       serversDetail = thothServers.getList(thothIndex);
-      IgnoredServers ignoredServers = new IgnoredServers(ignoredServersList);
-      ignored = ignoredServers.getIgnoredServersDetail();
+//      IgnoredServers ignoredServers = new IgnoredServers(ignoredServersList);
+//      ignored = ignoredServers.getIgnoredServersDetail();
+//      ignored = new ArrayList<ServerDetail>();
 
       //TODO: why 10?
       ExecutorService service = Executors.newFixedThreadPool(10);
@@ -97,7 +97,7 @@ public class ThothSampler implements Job {
 
         for (ServerDetail server: serversDetail){
 
-          if (ignoredServers.isServerIgnored(server)) continue;
+//          if (ignoredServers.isServerIgnored(server)) continue;
 
           try {
             Future<String> future = ser.submit(new SamplerWorker(
