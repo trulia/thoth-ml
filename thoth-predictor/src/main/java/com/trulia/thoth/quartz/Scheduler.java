@@ -1,7 +1,6 @@
 package com.trulia.thoth.quartz;
 
 import com.trulia.thoth.predictor.ModelHealth;
-import com.trulia.thoth.predictor.StaticModelHealth;
 import org.apache.log4j.Logger;
 import org.quartz.*;
 import org.quartz.impl.StdSchedulerFactory;
@@ -19,12 +18,6 @@ public class Scheduler {
   private String thothIndex;
   private String schedule;
   private ModelHealth modelHealth;
-
-  //TODO: To remove ASAP  - BEST-1377
-  private StaticModelHealth drStaticModelHealth;
-  private StaticModelHealth googleStaticModelHealth;
-  private StaticModelHealth mobileStaticModelHealth;
-  private StaticModelHealth userStaticModelHealth;
   private int lineCountLimit;
   private String ignoredServers;
 
@@ -51,13 +44,6 @@ public class Scheduler {
       scheduler.getContext().put("ignoredServers", ignoredServers);
       scheduler.getContext().put("thothIndex",thothIndex);
       scheduler.getContext().put("modelHealth",modelHealth);
-
-      //TODO: To remove ASAP  - BEST-1377
-      scheduler.getContext().put("userStaticModelHealth",userStaticModelHealth);
-      scheduler.getContext().put("drStaticModelHealth",drStaticModelHealth);
-      scheduler.getContext().put("googleStaticModelHealth",googleStaticModelHealth);
-      scheduler.getContext().put("mobileStaticModelHealth",mobileStaticModelHealth);
-
       scheduler.scheduleJob(workerJob, workerTrigger);
     } else {
       LOG.info("Sampling disabled. Skipping.");
@@ -120,38 +106,6 @@ public class Scheduler {
 
   public ModelHealth getModelHealth() {
     return modelHealth;
-  }
-
-  public void setDrStaticModelHealth(StaticModelHealth drStaticModelHealth) {
-    this.drStaticModelHealth = drStaticModelHealth;
-  }
-
-  public StaticModelHealth getDrStaticModelHealth() {
-    return drStaticModelHealth;
-  }
-
-  public void setGoogleStaticModelHealth(StaticModelHealth googleStaticModelHealth) {
-    this.googleStaticModelHealth = googleStaticModelHealth;
-  }
-
-  public StaticModelHealth getGoogleStaticModelHealth() {
-    return googleStaticModelHealth;
-  }
-
-  public void setMobileStaticModelHealth(StaticModelHealth mobileStaticModelHealth) {
-    this.mobileStaticModelHealth = mobileStaticModelHealth;
-  }
-
-  public StaticModelHealth getMobileStaticModelHealth() {
-    return mobileStaticModelHealth;
-  }
-
-  public void setUserStaticModelHealth(StaticModelHealth userStaticModelHealth) {
-    this.userStaticModelHealth = userStaticModelHealth;
-  }
-
-  public StaticModelHealth getUserStaticModelHealth() {
-    return userStaticModelHealth;
   }
 
   public void setLineCountLimit(int lineCountLimit) {

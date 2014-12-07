@@ -1,5 +1,6 @@
 package com.trulia.thoth;
 
+import com.trulia.thoth.utils.MergeUtils;
 import hex.gbm.GBM;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.log4j.Logger;
@@ -28,12 +29,12 @@ import java.util.Random;
 
 @Component
 public class Model {
-  private static final String H2O_CLOUD_NAME = "predictorCloud";
-  static final int slowQueryThreshold = 100;
   private static final Logger LOG = Logger.getLogger(Model.class);
-
-  private Random random = new Random();
+  private static final String H2O_CLOUD_NAME = "predictorCloud";
+  private Random random;
   private String version;
+  @Value("${thoth.predictor.slowquery.threshold}")
+  private int slowQueryThreshold;
   @Value("${thoth.merging.dir}")
   private String mergeDirectory;
   @Value("${train.dataset.location}")
@@ -46,6 +47,7 @@ public class Model {
 
   @PostConstruct
   public void init() {
+    random = new Random();
     // Trying to fetch the version from file
     try {
       FileReader file = new FileReader("version");
@@ -66,6 +68,10 @@ public class Model {
    */
   public String getVersion() {
     return version;
+  }
+
+  public String getModelLocation() {
+    return modelLocation;
   }
 
   public void setVersion(String version) {
@@ -107,7 +113,7 @@ public class Model {
    */
   public String trainModel() throws Exception {
     String tempVersion = generateNewVersion();
-    LOG.info("Training new model... new model will have version("+tempVersion+")");
+    LOG.info("Training new model... new model will have version(" + tempVersion + ")");
     trainAndStoreModel(tempVersion);
     setNewVersion(tempVersion);
     return version;
@@ -155,8 +161,7 @@ public class Model {
     while ((line=br.readLine()) != null) {
       Double[] instance = Instance.create(Converter.tsvToQueryPojo(line), slowQueryThreshold, false);
       if (instance == null) continue; // invalid instance, skipping
-      LOG.info("Instance " + ArrayUtils.toString(instance));
-
+      LOG.debug("Instance: " + ArrayUtils.toString(instance));
       // Separate into training and test
       if (random.nextInt(100) >= 70) {
         test.add(instance);
@@ -171,24 +176,19 @@ public class Model {
 
 
   /**
-   * Exports dataset to file
-   * @param dataset ArrayList of double arrays
+   * Exports dataSet to file
+   * @param dataSet ArrayList of double arrays
    * @param path of the file that needs to be stored
    * @throws java.io.IOException
    */
-  private void exportDataset(ArrayList<Double[]> dataset, String path) throws IOException {
-    if (dataset == null) {
-      LOG.warn("Empty dataset. Nothing to export. Skipping ...");
+  private void exportDataset(ArrayList<Double[]> dataSet, String path) throws IOException {
+    if (dataSet == null) {
+      LOG.warn("Empty dataSet. Nothing to export. Skipping ...");
       return;
     }
-
-    System.out.println("Trained set: " + exportedTrainDataset);
-
+    LOG.debug("Trained set: " + exportedTrainDataset);
     BufferedWriter bw = new BufferedWriter(new FileWriter(path));
-    for (Double[] example: dataset) {
-      if (example.length != 10) { //TODO: too specific, need to make it generic
-        // Perform this check?
-      }
+    for (Double[] example: dataSet) {
       StringBuffer sb = new StringBuffer();
       for(Double value: example) {
         sb.append(value + "\t");
@@ -238,7 +238,7 @@ public class Model {
     gbm.learn_rate = 0.1f;
     gbm.min_rows = 10;
     gbm.nbins = 20;
-    gbm.cols =  new int[] {1,2,3,4,5,6,7,8,9};
+    gbm.cols =  new int[] {1,2,3,4,5,6};
     gbm.validation = ftest;
     gbm.invoke();
     GBM.GBMModel model = UKV.get(gbm.dest());
@@ -267,7 +267,5 @@ public class Model {
 
   private abstract static class PrepData { abstract Vec prep(Frame fr); }
 
-  public String getModelLocation() {
-    return modelLocation;
-  }
+
 }

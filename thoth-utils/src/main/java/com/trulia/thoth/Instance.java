@@ -1,5 +1,7 @@
 package com.trulia.thoth;
 
+
+import com.trulia.thoth.classifier.Classifier;
 import com.trulia.thoth.pojo.QueryPojo;
 import com.trulia.thoth.pojo.QuerySamplingDetails;
 import org.codehaus.jackson.map.DeserializationConfig;
@@ -9,7 +11,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 /**
- * User: dbraga - Date: 11/25/14
+ * User: dbraga - Date: 12/6/14
  */
 public class Instance {
 
@@ -26,7 +28,7 @@ public class Instance {
    * @param queryPojo query pojo
    * @param slowQueryThreshold threshold decided to define a query fast/slow
    * @return instance
-   * @throws IOException
+   * @throws java.io.IOException
    */
   public static Double[] create(QueryPojo queryPojo, int slowQueryThreshold, boolean isPredictionTime) throws IOException {
     ArrayList<Double> instance = new ArrayList<Double>();
@@ -79,18 +81,15 @@ public class Instance {
    * @param bitmask
    */
   private static void addBitmaskBooleanFields(ArrayList<Double> instance, String bitmask) {
-    if (bitmask.length() != 7) {
+    if (bitmask.length() != Classifier.BITMASK_SIZE) {
       System.out.println("Invalid bitmask: " + bitmask);
       return;
     }
 
-    instance.add(Double.parseDouble(String.valueOf(bitmask.charAt(0))));
-    instance.add(Double.parseDouble(String.valueOf(bitmask.charAt(1))));
-    instance.add(Double.parseDouble(String.valueOf(bitmask.charAt(2))));
-    instance.add(Double.parseDouble(String.valueOf(bitmask.charAt(3))));
-    instance.add(Double.parseDouble(String.valueOf(bitmask.charAt(4))));
-    instance.add(Double.parseDouble(String.valueOf(bitmask.charAt(5))));
-    instance.add(Double.parseDouble(String.valueOf(bitmask.charAt(6))));
+    for (int bitMaskOffset = 0 ; bitMaskOffset <  Classifier.BITMASK_SIZE; bitMaskOffset ++){
+      instance.add(Double.parseDouble(String.valueOf(bitmask.charAt(bitMaskOffset))));
+    }
+
   }
 
 

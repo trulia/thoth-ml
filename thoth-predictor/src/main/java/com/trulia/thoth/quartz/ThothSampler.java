@@ -1,10 +1,8 @@
 package com.trulia.thoth.quartz;
 
-import com.trulia.thoth.MergeUtils;
+import com.trulia.thoth.utils.MergeUtils;
 import com.trulia.thoth.pojo.ServerDetail;
 import com.trulia.thoth.predictor.ModelHealth;
-import com.trulia.thoth.predictor.StaticModelHealth;
-import com.trulia.thoth.util.IgnoredServers;
 import com.trulia.thoth.util.ThothServers;
 import org.apache.log4j.Logger;
 import org.apache.solr.client.solrj.SolrServerException;
@@ -75,15 +73,10 @@ public class ThothSampler implements Job {
       HttpSolrServer thothIndex = new HttpSolrServer((String)schedulerContext.get("thothIndex"));
       ThothServers thothServers = new ThothServers();
 
-      //TODO: To remove ASAP  - BEST-1377
-      StaticModelHealth userStaticModelHealth = (StaticModelHealth)schedulerContext.get("userStaticModelHealth");
-      StaticModelHealth drStaticModelHealth = (StaticModelHealth)schedulerContext.get("drStaticModelHealth");
-      StaticModelHealth mobileStaticModelHealth = (StaticModelHealth)schedulerContext.get("mobileStaticModelHealth");
-      StaticModelHealth googleStaticModelHealth = (StaticModelHealth)schedulerContext.get("googleStaticModelHealth");
-
       serversDetail = thothServers.getList(thothIndex);
-      IgnoredServers ignoredServers = new IgnoredServers(ignoredServersList);
-      ignored = ignoredServers.getIgnoredServersDetail();
+//      IgnoredServers ignoredServers = new IgnoredServers(ignoredServersList);
+//      ignored = ignoredServers.getIgnoredServersDetail();
+//      ignored = new ArrayList<ServerDetail>();
 
       //TODO: why 10?
       ExecutorService service = Executors.newFixedThreadPool(10);
@@ -97,7 +90,7 @@ public class ThothSampler implements Job {
 
         for (ServerDetail server: serversDetail){
 
-          if (ignoredServers.isServerIgnored(server)) continue;
+//          if (ignoredServers.isServerIgnored(server)) continue;
 
           try {
             Future<String> future = ser.submit(new SamplerWorker(
@@ -105,11 +98,7 @@ public class ThothSampler implements Job {
                 samplingDirectory,
                 mapper,
                 thothIndex,
-                modelHealth,
-                userStaticModelHealth,
-                drStaticModelHealth,
-                mobileStaticModelHealth,
-                googleStaticModelHealth
+                modelHealth
             ));
             futureList.add(future);
           } catch (IOException e) {
@@ -133,7 +122,7 @@ public class ThothSampler implements Job {
 
 
       } else {
-        LOG.error("Coudn't create directory");
+        LOG.error("Could not create directory");
       }
 
     } catch (SchedulerException e) {

@@ -3,8 +3,8 @@ package com.trulia.thoth.quartz;
 import com.trulia.thoth.Converter;
 import com.trulia.thoth.pojo.ServerDetail;
 import com.trulia.thoth.predictor.ModelHealth;
-import com.trulia.thoth.predictor.StaticModelHealth;
 import com.trulia.thoth.requestdocuments.MessageRequestDocument;
+import com.trulia.thoth.requestdocuments.SolrQueryRequestDocument;
 import com.trulia.thoth.util.Utils;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
@@ -34,29 +34,8 @@ public class SamplerWorker implements Callable<String>{
   private String fileName;
   private static final int TOT_SAMPLE_COUNT = 100;
   private static final int RANDOM_SAMPLE_COUNT = TOT_SAMPLE_COUNT;
-
-
   private ModelHealth modelHealth;
-
-  //TODO: To remove ASAP  - BEST-1377
-  private StaticModelHealth userStaticModelHealth;
-  private StaticModelHealth mobileStaticModelHealth;
-  private StaticModelHealth drStaticModelHealth;
-  private StaticModelHealth googleStaticModelHealth;
-
-  //TODO: move
   private static final String EXCEPTION = "exception_b";
-
-  // DR1 : search501
-  private static final String DR1_HOSTNAME = "search501";
-  // Google: search213
-  private static final String GOOGLE_HOSTNAME = "search213";
-  // User: search37
-  private static final String USER_HOSTNAME = "search37";
-  // Mobile: search39
-  private static final String MOBILE_HOSTNAME = "search39";
-
-
   private static final int SLOW_FAST_QUERY_QTIME_THRESHOLD = 100;
   private String hostname;
   private String port;
@@ -75,8 +54,7 @@ public class SamplerWorker implements Callable<String>{
     return items.subList(0, m);
   }
 
-  public SamplerWorker(ServerDetail server, String samplingDirectory, ObjectMapper mapper, HttpSolrServer thothIndex, ModelHealth modelHealth,
-                       StaticModelHealth userStaticModelHealth,StaticModelHealth drStaticModelHealth,StaticModelHealth mobileStaticModelHealth,StaticModelHealth googleStaticModelHealth ) throws IOException {
+  public SamplerWorker(ServerDetail server, String samplingDirectory, ObjectMapper mapper, HttpSolrServer thothIndex, ModelHealth modelHealth) throws IOException {
     this.server = server;
     this.mapper = mapper;
     DateFormat dateFormat = new SimpleDateFormat("yyyy_MM_dd");
@@ -90,35 +68,28 @@ public class SamplerWorker implements Callable<String>{
     this.thothIndex = thothIndex;
     this.modelHealth = modelHealth;
 
-    this.userStaticModelHealth = userStaticModelHealth;
-    this.drStaticModelHealth = drStaticModelHealth;
-    this.mobileStaticModelHealth = mobileStaticModelHealth;
-    this.googleStaticModelHealth = googleStaticModelHealth;
-
   }
 
 
-
-
-
-  //TODO: To remove ASAP  - BEST-1377
-  public void setSetStaticHealth(int qtime, boolean isDocumentIdentifiedAsSlow, boolean isSlowQueryPredictionValid, String hostname, StaticModelHealth staticModelHealth){
-    staticModelHealth.incrementSampleCount();
+  /**
+   * Takes care of updating the current model health
+   * @param qtime qtime of a request
+   * @param isDocumentIdentifiedAsSlow if the request got identified as slow
+   * @param modelHealth the current model health
+   */
+  public void updateModelHealth(int qtime, boolean isDocumentIdentifiedAsSlow, ModelHealth modelHealth){
       if (qtime > SLOW_FAST_QUERY_QTIME_THRESHOLD){
         if (isDocumentIdentifiedAsSlow){
-          staticModelHealth.incrementTruePositive();
+          modelHealth.incrementTruePositive();
         } else {
-          staticModelHealth.incrementFalseNegative();
+          modelHealth.incrementFalseNegative();
         }
       } else {
         if (isDocumentIdentifiedAsSlow){
-          staticModelHealth.incrementFalsePositive();
+          modelHealth.incrementFalsePositive();
         } else {
-          staticModelHealth.incrementTrueNegative();
+          modelHealth.incrementTrueNegative();
         }
-      }
-      if (!isSlowQueryPredictionValid){
-        staticModelHealth.incrementPredictionErrors();
       }
   }
 
@@ -141,30 +112,14 @@ public class SamplerWorker implements Callable<String>{
     return samplingSolrQuery;
   }
 
-  private void updateHealthScores(SolrDocument doc){
-    // Update the model health based on the accuracy of the current prediction
-    modelHealth.computeScore(((Boolean) doc.getFieldValue("isSlowQueryPredictionValid_b")) == true ? 0:1);
-
-    Integer qtime = (Integer) doc.getFieldValue("qtime_i");
+  /**
+   * Determines if prediction for given thoth document was correct or not and update the health score accordingly
+   * @param doc thoth document
+   */
+  private void verifyQualityOfPrediction(SolrDocument doc){
+    Integer qtime = (Integer) doc.getFieldValue(SolrQueryRequestDocument.QTIME);
     boolean isDocumentIdentifiedAsSlow = (Boolean) doc.getFieldValue("slowQuery_b") == true;
-    boolean isSlowQueryPredictionValid = ((Boolean) doc.getFieldValue("isSlowQueryPredictionValid_b")) == true;
-
-
-    //TODO: To remove ASAP  - BEST-1377
-
-    if (((String)doc.getFieldValue("params_s")).contains("truliatest")){
-      setSetStaticHealth(qtime,isDocumentIdentifiedAsSlow,isSlowQueryPredictionValid,hostname, drStaticModelHealth);
-
-
-    }
-
-    if (GOOGLE_HOSTNAME.equals(hostname)){
-      setSetStaticHealth(qtime,isDocumentIdentifiedAsSlow,isSlowQueryPredictionValid,hostname, googleStaticModelHealth);
-    } else if (MOBILE_HOSTNAME.equals(hostname)){
-      setSetStaticHealth(qtime,isDocumentIdentifiedAsSlow,isSlowQueryPredictionValid,hostname, mobileStaticModelHealth);
-    } else if (USER_HOSTNAME.equals(hostname)){
-      setSetStaticHealth(qtime,isDocumentIdentifiedAsSlow,isSlowQueryPredictionValid,hostname, userStaticModelHealth);
-    }
+    updateModelHealth(qtime, isDocumentIdentifiedAsSlow, modelHealth);
   }
 
   /**
@@ -185,10 +140,9 @@ public class SamplerWorker implements Callable<String>{
       return "skipped";
     }
     List<SolrDocument> randomSample = randomSample(sampleOfThothDocs, RANDOM_SAMPLE_COUNT);
-    for (SolrDocument doc: randomSample){
-      //TODO: refactor this
-      updateHealthScores(doc);
-      writer.write(Converter.thothDocToTsv(doc, mapper));
+    for (SolrDocument thothDocument: randomSample){
+      verifyQualityOfPrediction(thothDocument);
+      writer.write(Converter.thothDocToTsv(thothDocument, mapper));
     }
     closeFileWriter();
     return "done";
