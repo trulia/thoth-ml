@@ -50,11 +50,20 @@ public class Test {
     while (line != null) {
       try {
         line = br.readLine();
-        if (line == null) continue;
-        if (line == "") continue;
+        if (line == null) {
+          System.out.println("line not valid " + line);
+          continue;
+        }
+        if (line == "") {
+          System.out.println("line not valid " + line);
+          continue;
+        }
 
         String[] split = line.split("\t");
-        if (split.length != 7) continue;
+        if (split.length != 7) {
+          System.out.println("line not valid " + line);
+          continue;
+        }
 
         // name of server
         split[0] = "demo-host";
@@ -66,7 +75,10 @@ public class Test {
         //      split[3] ;
         // bitmask
 
-        if (split[6].length() != 7) continue;
+        if (split[6].length() != 7) {
+          System.out.println("bitmask not valid " + line);
+          continue;
+        }
 
         ObjectMapper mapper = new ObjectMapper();
         mapper.configure(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
@@ -90,11 +102,16 @@ public class Test {
         details1.setFacetField(details.getFacetField());
         details1.setFacetZeros(details.getFacetZeros());
 
+        String fq = null;
+        if (details.getFilterQuery() != null)
+        fq = removeTruliaFieldValues(removeTruliaFieldNames(details.getFilterQuery()));
 
-        String fq = removeTruliaFieldValues(removeTruliaFieldNames(details.getFilterQuery()));
         details1.setFilterQuery(fq);
 
-        String query = removeTruliaFieldValues(removeTruliaFieldNames(details.getQuery()));
+        String query = null;
+        if (details.getQuery() != null)
+          query = removeTruliaFieldValues(removeTruliaFieldNames(details.getQuery()));
+
         details1.setQuery(query);
 
         details1.setRows(String.valueOf(details.getRows()));
@@ -126,11 +143,13 @@ public class Test {
 //        for (String el: fields){
 //          System.out.println(el);
 //        }
-        System.out.println(line);
-//        bw.write(line );
-//        bw.newLine();
+//        System.out.println(line);
+        bw.write(line );
+        bw.newLine();
 
-      } catch (Exception ignored){}
+      } catch (Exception ignored){
+        ignored.printStackTrace();
+      }
     }
 
     bw.close();
