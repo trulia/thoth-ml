@@ -32,11 +32,11 @@ import java.io.InputStream;
   @Value("${thoth.predictor.model.health.invalid.score}")
   private String PREDICTOR_MODEL_HEALTH_INVALID_SCORE;
 
+  // List of actions
   private static final String RETRIEVE_VERSION = "getCurrentModelVersion";
   private static final String INVALIDATE_MODEL = "invalidateModel";
   // Model health score
   private static final String GET_MODEL_HEALTH_SCORE = "getModelHealthScore";
-
   // Check for model health score overflows
   private static final String CHECK_MODEL_HEALTH_OVERFLOW = "checkModelHealthOverflow";
   private static final String RESET_MODEL_HEALTH_SCORE = "resetModelHealthScore";
@@ -77,7 +77,7 @@ import java.io.InputStream;
    return  null;
   }
 
-
+  // Get specific version of model
   @RequestMapping(value = "/models/{model_version}", method = RequestMethod.GET)
   public void getFile(
       @PathVariable("model_version") String version,
@@ -96,6 +96,7 @@ import java.io.InputStream;
 
   }
 
+  // Get threshold for specific model version
   @RequestMapping(value = "/threshold/{model_version}", method = RequestMethod.GET)
   public void getThreshold(
       @PathVariable("model_version") String version,
