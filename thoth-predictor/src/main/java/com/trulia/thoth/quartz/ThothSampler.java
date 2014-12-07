@@ -1,8 +1,8 @@
 package com.trulia.thoth.quartz;
 
+import com.trulia.thoth.utils.MergeUtils;
 import com.trulia.thoth.pojo.ServerDetail;
 import com.trulia.thoth.predictor.ModelHealth;
-import com.trulia.thoth.predictor.StaticModelHealth;
 import com.trulia.thoth.util.ThothServers;
 import org.apache.log4j.Logger;
 import org.apache.solr.client.solrj.SolrServerException;
@@ -11,11 +11,9 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.SerializationConfig;
 import org.quartz.*;
 
-import java.io.*;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.*;
 
@@ -30,6 +28,8 @@ public class ThothSampler implements Job {
   private String mergeDirectory;
   private String samplingDirectory;
   private ObjectMapper mapper;
+  private int lineCountLimit;
+  private String ignoredServersList;
 
 
   public ArrayList<File> filesinDir(String directoryName){
@@ -45,16 +45,16 @@ public class ThothSampler implements Job {
     return filelist;
   }
 
-  private boolean isIgnored(ServerDetail serverDetail){
-    for (ServerDetail toCheck: ignored){
-      if ((toCheck.getName().equals(serverDetail.getName())) &&
-          (toCheck.getCore().equals(serverDetail.getCore())) &&
-          (toCheck.getPool().equals(serverDetail.getPool())) &&
-          (toCheck.getPort().equals(serverDetail.getPort()))){
-        return true;
-      }
+  /**
+   * Merge all sampling files into a single file
+   */
+  private void mergeSamplingFiles(){
+    try {
+      new MergeUtils(MergeUtils.getMergeFile(mergeDirectory), samplingDirectory, lineCountLimit).merge();
+      LOG.info("Merge complete.");
+    } catch (IOException e) {
+      e.printStackTrace();
     }
-    return false;
   }
 
   @Override
@@ -66,70 +66,31 @@ public class ThothSampler implements Job {
       schedulerContext = context.getScheduler().getContext();
       mergeDirectory = (String)schedulerContext.get("mergingDir");
       samplingDirectory = (String)schedulerContext.get("samplingDir");
+      lineCountLimit = (Integer)schedulerContext.get("lineCountLimit");
+      ignoredServersList = (String)schedulerContext.get("ignoredServersList");
+
       ModelHealth modelHealth = (ModelHealth)schedulerContext.get("modelHealth");
       HttpSolrServer thothIndex = new HttpSolrServer((String)schedulerContext.get("thothIndex"));
       ThothServers thothServers = new ThothServers();
 
-      //TODO: To remove ASAP  - BEST-1377
-      StaticModelHealth userStaticModelHealth = (StaticModelHealth)schedulerContext.get("userStaticModelHealth");
-      StaticModelHealth drStaticModelHealth = (StaticModelHealth)schedulerContext.get("drStaticModelHealth");
-      StaticModelHealth mobileStaticModelHealth = (StaticModelHealth)schedulerContext.get("mobileStaticModelHealth");
-      StaticModelHealth googleStaticModelHealth = (StaticModelHealth)schedulerContext.get("googleStaticModelHealth");
-
-
-      //TODO: fix
       serversDetail = thothServers.getList(thothIndex);
+//      IgnoredServers ignoredServers = new IgnoredServers(ignoredServersList);
+//      ignored = ignoredServers.getIgnoredServersDetail();
+//      ignored = new ArrayList<ServerDetail>();
 
-
-
-      ignored  = new ArrayList<ServerDetail>();
-      ignored.add(new ServerDetail("search200", "user","8050","active"));
-      ignored.add(new ServerDetail("search228", "user","8050","active"));
-      ignored.add(new ServerDetail("search254", "user","8050","active"));
-      ignored.add(new ServerDetail("search255", "user","8050","active"));
-      ignored.add(new ServerDetail("search39", "user","8050","active"));
-
-      ignored.add(new ServerDetail("search42", "user","8050","active"));
-      ignored.add(new ServerDetail("search43", "user","8050","active"));
-      ignored.add(new ServerDetail("search44", "user","8050","active"));
-      ignored.add(new ServerDetail("search252", "user","8050","active"));
-      ignored.add(new ServerDetail("search253", "user","8050","active"));
-
-
-      //serversDetail = new ArrayList<ServerDetail>();
-      //serversDetail.add(new ServerDetail("search213", "user", "8050", "active"));
-      //serversDetail.add(new ServerDetail("search204", "user", "8050", "active"));
-      //serversDetail.add(new ServerDetail("search205", "user", "8050", "active"));
-      //serversDetail.add(new ServerDetail("search222", "user", "8050", "active"));
-      //serversDetail.add(new ServerDetail("search38", "user", "8050", "active"));
-      //serversDetail.add(new ServerDetail("search37", "user", "8050", "active"));
-      //serversDetail.add(new ServerDetail("search256", "user", "8050", "active"));
-      //serversDetail.add(new ServerDetail("search257", "user", "8050", "active"));
-      //serversDetail.add(new ServerDetail("search258", "user", "8050", "active"));
-      //serversDetail.add(new ServerDetail("search259", "user", "8050", "active"));
-      //serversDetail.add(new ServerDetail("search222", "user", "8050", "active"));
-      //serversDetail.add(new ServerDetail("search25", "user", "8050", "active"));
-      //serversDetail.add(new ServerDetail("search26", "user", "8050", "active"));
-      //serversDetail.add(new ServerDetail("search226", "user", "8050", "active"));
-      //serversDetail.add(new ServerDetail("search20", "user", "8050", "active"));
-      //serversDetail.add(new ServerDetail("search246", "user", "8050", "active"));
-      //serversDetail.add(new ServerDetail("search247", "user", "8050", "active"));
-      //
-
-
+      //TODO: why 10?
       ExecutorService service = Executors.newFixedThreadPool(10);
       futureList = new ArrayList<Future>();
       CompletionService<String> ser = new ExecutorCompletionService<String>(service);
 
       File dir = new File(samplingDirectory);
       new File(mergeDirectory).mkdirs();
-
       boolean success = (dir).mkdirs();
       if (success || dir.exists() ) {
 
         for (ServerDetail server: serversDetail){
 
-          if (isIgnored(server)) continue;
+//          if (ignoredServers.isServerIgnored(server)) continue;
 
           try {
             Future<String> future = ser.submit(new SamplerWorker(
@@ -137,11 +98,7 @@ public class ThothSampler implements Job {
                 samplingDirectory,
                 mapper,
                 thothIndex,
-                modelHealth,
-                userStaticModelHealth,
-                drStaticModelHealth,
-                mobileStaticModelHealth,
-                googleStaticModelHealth
+                modelHealth
             ));
             futureList.add(future);
           } catch (IOException e) {
@@ -160,43 +117,12 @@ public class ThothSampler implements Job {
           }
         }
 
-
-
-
-
         LOG.info("Done Sampling. Merging single files into one");
-        try {
-          DateFormat dateFormat = new SimpleDateFormat("yyyy_MM_dd");
-          Date date = new Date();
-          String mergeFile = mergeDirectory +  dateFormat.format(date)+"_merged";
-          BufferedWriter bufferedWriter =  new BufferedWriter((new OutputStreamWriter(new FileOutputStream( mergeFile, true),"UTF-8")));
-
-
-          for (File file: filesinDir(samplingDirectory)){
-            LOG.info("Merging file: "  + file.getAbsoluteFile()+" to " + mergeFile);
-            BufferedReader reader = new BufferedReader(new FileReader(file));
-            String line;
-            while ((line = reader.readLine()) != null) {
-              bufferedWriter.write(line);
-              bufferedWriter.write("\n");
-            }
-            reader.close();
-            LOG.info("Merge finished. Deleting file: " + file.getAbsoluteFile() );
-            file.delete();
-
-          }
-          bufferedWriter.close();
-
-
-
-          LOG.info("Merge complete.");
-        } catch (IOException e) {
-          e.printStackTrace();
-        }
+        mergeSamplingFiles();
 
 
       } else {
-        LOG.error("Coudn't create directory");
+        LOG.error("Could not create directory");
       }
 
     } catch (SchedulerException e) {

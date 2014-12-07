@@ -1,7 +1,7 @@
 package com.trulia.thoth.quartz;
 
 import com.trulia.thoth.predictor.ModelHealth;
-import com.trulia.thoth.predictor.StaticModelHealth;
+import org.apache.log4j.Logger;
 import org.quartz.*;
 import org.quartz.impl.StdSchedulerFactory;
 
@@ -9,6 +9,7 @@ import org.quartz.impl.StdSchedulerFactory;
  * User: dbraga - Date: 7/21/14
  */
 public class Scheduler {
+  private static final Logger LOG = Logger.getLogger(Scheduler.class);
 
   private boolean samplingEnabled;
   private String samplingDir;
@@ -17,16 +18,12 @@ public class Scheduler {
   private String thothIndex;
   private String schedule;
   private ModelHealth modelHealth;
-
-  //TODO: To remove ASAP  - BEST-1377
-  private StaticModelHealth drStaticModelHealth;
-  private StaticModelHealth googleStaticModelHealth;
-  private StaticModelHealth mobileStaticModelHealth;
-  private StaticModelHealth userStaticModelHealth;
+  private int lineCountLimit;
+  private String ignoredServers;
 
   public void init() throws SchedulerException {
     if (samplingEnabled){
-      System.out.println("Sampling enabled.");
+      LOG.info("Thoth sampling enabled.");
 
       // Quartz Setup for resetting
       JobDetail workerJob = JobBuilder.newJob(ThothSampler.class)
@@ -43,18 +40,13 @@ public class Scheduler {
       scheduler.start();
       scheduler.getContext().put("samplingDir", samplingDir);
       scheduler.getContext().put("mergingDir", mergingDir);
+      scheduler.getContext().put("lineCountLimit", lineCountLimit);
+      scheduler.getContext().put("ignoredServers", ignoredServers);
       scheduler.getContext().put("thothIndex",thothIndex);
       scheduler.getContext().put("modelHealth",modelHealth);
-
-      //TODO: To remove ASAP  - BEST-1377
-      scheduler.getContext().put("userStaticModelHealth",userStaticModelHealth);
-      scheduler.getContext().put("drStaticModelHealth",drStaticModelHealth);
-      scheduler.getContext().put("googleStaticModelHealth",googleStaticModelHealth);
-      scheduler.getContext().put("mobileStaticModelHealth",mobileStaticModelHealth);
-
       scheduler.scheduleJob(workerJob, workerTrigger);
     } else {
-      System.out.println("Sampling disabled. Skipping.");
+      LOG.info("Sampling disabled. Skipping.");
     }
   }
 
@@ -116,35 +108,19 @@ public class Scheduler {
     return modelHealth;
   }
 
-  public void setDrStaticModelHealth(StaticModelHealth drStaticModelHealth) {
-    this.drStaticModelHealth = drStaticModelHealth;
+  public void setLineCountLimit(int lineCountLimit) {
+    this.lineCountLimit = lineCountLimit;
   }
 
-  public StaticModelHealth getDrStaticModelHealth() {
-    return drStaticModelHealth;
+  public int getLineCountLimit() {
+    return lineCountLimit;
   }
 
-  public void setGoogleStaticModelHealth(StaticModelHealth googleStaticModelHealth) {
-    this.googleStaticModelHealth = googleStaticModelHealth;
+  public void setIgnoredServers(String ignoredServers) {
+    this.ignoredServers = ignoredServers;
   }
 
-  public StaticModelHealth getGoogleStaticModelHealth() {
-    return googleStaticModelHealth;
-  }
-
-  public void setMobileStaticModelHealth(StaticModelHealth mobileStaticModelHealth) {
-    this.mobileStaticModelHealth = mobileStaticModelHealth;
-  }
-
-  public StaticModelHealth getMobileStaticModelHealth() {
-    return mobileStaticModelHealth;
-  }
-
-  public void setUserStaticModelHealth(StaticModelHealth userStaticModelHealth) {
-    this.userStaticModelHealth = userStaticModelHealth;
-  }
-
-  public StaticModelHealth getUserStaticModelHealth() {
-    return userStaticModelHealth;
+  public String getIgnoredServers() {
+    return ignoredServers;
   }
 }
