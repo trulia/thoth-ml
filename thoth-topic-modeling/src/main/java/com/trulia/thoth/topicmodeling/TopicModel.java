@@ -1,34 +1,12 @@
 package com.trulia.thoth.topicmodeling;
 
-import cc.mallet.pipe.CharSequence2TokenSequence;
-import cc.mallet.pipe.CharSequenceLowercase;
-import cc.mallet.pipe.Pipe;
-import cc.mallet.pipe.SerialPipes;
-import cc.mallet.pipe.TokenSequence2FeatureSequence;
-import cc.mallet.pipe.TokenSequenceRemoveStopwords;
+import cc.mallet.pipe.*;
 import cc.mallet.pipe.iterator.CsvIterator;
 import cc.mallet.topics.ParallelTopicModel;
-import cc.mallet.topics.TopicInferencer;
-import cc.mallet.types.Alphabet;
-import cc.mallet.types.FeatureSequence;
-import cc.mallet.types.IDSorter;
-import cc.mallet.types.Instance;
-import cc.mallet.types.InstanceList;
-import cc.mallet.types.LabelSequence;
+import cc.mallet.types.*;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.util.ArrayList;
-import java.util.Formatter;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Locale;
-import java.util.TreeSet;
+import java.io.*;
+import java.util.*;
 import java.util.regex.Pattern;
 
 /**
@@ -36,8 +14,13 @@ import java.util.regex.Pattern;
  */
 
 public class TopicModel {
+  private static Properties properties;
 
   public void testTopicModeling(int numTopics, int numIterations, int numKeywordsToOutput) throws IOException {
+    System.out.println("Stop word file: " + properties.getProperty("file.stopWords"));
+    System.out.println("Exceptions mallet format file: " + properties.getProperty("file.exceptions.mallet-format"));
+
+
     // Begin by importing documents from text to feature sequences
     ArrayList<Pipe> pipeList = new ArrayList<Pipe>();
 
@@ -45,12 +28,12 @@ public class TopicModel {
     pipeList.add( new CharSequenceLowercase() );
     pipeList.add( new CharSequence2TokenSequence(Pattern.compile("\\p{L}[\\p{L}\\p{P}]+\\p{L}")) );
 
-    pipeList.add( new TokenSequenceRemoveStopwords(    new File("/Users/dbraga/TRULIA_REPOS/git/thoth-ml/target/classes/stopwords.txt"), "UTF-8", false, false, false) );
+    pipeList.add( new TokenSequenceRemoveStopwords(new File(properties.getProperty("file.stopWords")), "UTF-8", false, false, false) );
     pipeList.add( new TokenSequence2FeatureSequence() );
 
     InstanceList instances = new InstanceList (new SerialPipes(pipeList));
 
-    Reader fileReader = new InputStreamReader(new FileInputStream("/tmp/exceptions-only"));
+    Reader fileReader = new InputStreamReader(new FileInputStream(properties.getProperty("file.exceptions.mallet-format")));
 
     instances.addThruPipe(new CsvIterator (fileReader, Pattern.compile("^(\\S*)[\\s,]*(\\S*)[\\s,]*(.*)$"),
       3, 2, 1)); // data, label, name fields
@@ -83,7 +66,7 @@ public class TopicModel {
     for (int topic = 0; topic < numTopics; topic++) {
       Iterator<IDSorter> iterator = topicSortedWords.get(topic).iterator();
       //TODO: parametrize this
-      BufferedWriter bw = new BufferedWriter(new FileWriter("thoth-topic-modeling/viz/topic-" +
+      BufferedWriter bw = new BufferedWriter(new FileWriter(properties.getProperty("directory.topicModeling.visualization") + "topic-" +
         topic +
         ".csv"));
       bw.write("text,size,topic");
@@ -130,7 +113,7 @@ public class TopicModel {
   }
 
   public static void main(String[] args) throws Exception {
-
+    properties = Util.fetchPropertiesFromPropertiesFile();
     int numTopics = 10;
     int numIterations = 100;
     int numKeywordsToOutput = 50;

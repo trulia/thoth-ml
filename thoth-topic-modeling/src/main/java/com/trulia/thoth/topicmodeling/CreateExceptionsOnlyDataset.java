@@ -1,20 +1,19 @@
 package com.trulia.thoth.topicmodeling;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
+import java.util.Properties;
 
 /**
  * Created by pmhatre on 10/17/14.
  */
 public class CreateExceptionsOnlyDataset {
 
-  public static void main(String[] args) throws IOException, ClassNotFoundException {
+  private static Properties properties;
 
-    BufferedReader br = new BufferedReader(new FileReader("/tmp/exceptions"));
-    BufferedWriter bw = new BufferedWriter(new FileWriter("/tmp/exceptions-only"));
+  public static void main(String[] args) throws IOException, ClassNotFoundException {
+    properties = Util.fetchPropertiesFromPropertiesFile();
+    BufferedReader br = new BufferedReader(new FileReader(properties.getProperty("file.exceptions")));
+    BufferedWriter bw = new BufferedWriter(new FileWriter(properties.getProperty("file.exceptions.mallet-format")));
 
     String line;
     int id = 0;
