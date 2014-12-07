@@ -19,12 +19,11 @@
         <property name="locations">
             <list>
                 <value>classpath:application.default.properties</value>
-                <!--<value>classpath:application.properties</value>-->
+                <value>classpath:application.properties</value>
             </list>
         </property>
     </bean>
 
-    <!--  //TODO: To remove ASAP  - BEST-1377 -->
     <bean id="modelHealth" class="com.trulia.thoth.predictor.ModelHealth"/>
 
     <!-- Sampling thoth data from Thoth index -->
