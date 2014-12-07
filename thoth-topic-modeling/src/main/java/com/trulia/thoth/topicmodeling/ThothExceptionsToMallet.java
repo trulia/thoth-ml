@@ -5,8 +5,11 @@ import java.util.Properties;
 
 /**
  * Created by pmhatre on 10/17/14.
+ *
+ * Helper to convert a file containing only exceptions fetched by thoth to a file intelligible from Mallet
+ *
  */
-public class CreateExceptionsOnlyDataset {
+public class ThothExceptionsToMallet {
 
   private static Properties properties;
 
