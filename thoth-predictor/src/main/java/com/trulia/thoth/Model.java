@@ -61,12 +61,17 @@ public class Model {
     }
   }
 
+
   /**
    * Retrieve model version
    * @return String representation of the version
    */
   public String getVersion() {
     return version;
+  }
+
+  public String getModelLocation() {
+    return modelLocation;
   }
 
   public void setVersion(String version) {
@@ -172,21 +177,21 @@ public class Model {
 
 
   /**
-   * Exports dataset to file
-   * @param dataset ArrayList of double arrays
+   * Exports dataSet to file
+   * @param dataSet ArrayList of double arrays
    * @param path of the file that needs to be stored
    * @throws java.io.IOException
    */
-  private void exportDataset(ArrayList<Double[]> dataset, String path) throws IOException {
-    if (dataset == null) {
-      LOG.warn("Empty dataset. Nothing to export. Skipping ...");
+  private void exportDataset(ArrayList<Double[]> dataSet, String path) throws IOException {
+    if (dataSet == null) {
+      LOG.warn("Empty dataSet. Nothing to export. Skipping ...");
       return;
     }
 
     System.out.println("Trained set: " + exportedTrainDataset);
 
     BufferedWriter bw = new BufferedWriter(new FileWriter(path));
-    for (Double[] example: dataset) {
+    for (Double[] example: dataSet) {
       if (example.length != 10) { //TODO: too specific, need to make it generic
         // Perform this check?
       }
@@ -268,7 +273,5 @@ public class Model {
 
   private abstract static class PrepData { abstract Vec prep(Frame fr); }
 
-  public String getModelLocation() {
-    return modelLocation;
-  }
+
 }

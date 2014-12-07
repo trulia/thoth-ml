@@ -13,6 +13,22 @@ public class ModelHealth {
   private int trueNegative;
   private static final int MAX_SAMPLE_COUNT = Integer.MAX_VALUE / 2;
 
+  public void incrementFalsePositive(){
+    falsePositive++;
+  }
+
+  public void incrementFalseNegative(){
+    falseNegative++;
+  }
+
+  public void incrementTrueNegative(){
+    trueNegative++;
+  }
+
+  public void incrementTruePositive() {
+    truePositive++;
+  }
+
   public float getAvgPerClassError() {
     float score = ((1.0f* falseNegative)/(falseNegative + truePositive) + (1.0f * falsePositive)/(falsePositive+trueNegative))/2;
     if (Float.isNaN(score)) return 0.0f;
