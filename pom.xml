@@ -10,6 +10,7 @@
     <modules>
         <module>thoth-predictor</module>
         <module>thoth-utils</module>
+        <module>thoth-topic-modeling</module>
     </modules>
 
     <properties>
