@@ -1,6 +1,5 @@
 package com.trulia.thoth.predictor;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 /**
@@ -8,31 +7,44 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class ModelHealth {
-  @Value("${thoth.predictor.max.number.samples}")
-  private int MAX_NUM_IMPORTANT_SAMPLES;
+  private int falsePositive;
+  private int falseNegative;
+  private int truePositive;
+  private int trueNegative;
+  private static final int MAX_SAMPLE_COUNT = Integer.MAX_VALUE / 2;
+
+  public float getAvgPerClassError() {
+    float score = ((1.0f* falseNegative)/(falseNegative + truePositive) + (1.0f * falsePositive)/(falsePositive+trueNegative))/2;
+    if (Float.isNaN(score)) return 0.0f;
+    else return score;
+  }
 
   /**
-   * Health score of the model, the more the health score is low - the more the model is healthy
+   * Reset all the counters
    */
-  private float healthScore = 0.0f;
+  public void resetCounters(){
+    falsePositive = 0;
+    falseNegative = 0 ;
+    truePositive = 0;
+    trueNegative = 0;
+  }
+
   /**
-   * Number of samples used to test model health
+   * Check if the counters are overflowing over MAX_SAMPLE_COUNT, if so they get divided to keep an accurate amount of counts
+   * This method can be called periodically depending of the speed on how fast the counts gets incremented
+   * @return true if they overflowed , false if not
    */
-  private int sample_count = 0;
-
-  public float getHealthScore() {
-    return healthScore;
+  public boolean checkCountOverflow() {
+    if(truePositive >= MAX_SAMPLE_COUNT || trueNegative >= MAX_SAMPLE_COUNT || falsePositive >= MAX_SAMPLE_COUNT
+        || falseNegative >= MAX_SAMPLE_COUNT) {
+      truePositive /= 2;
+      trueNegative /= 2;
+      falsePositive /= 2;
+      falseNegative /= 2;
+      return true;
+    }
+    return false;
   }
 
-  public void setHealthScore(float healthScore){
-    this.healthScore = healthScore;
-  }
-
-  public void computeScore(int error){
-    // Increment the sample count, but keep the number of samples between [1, MAX_NUM_IMPORTANT_SAMPLES]
-    sample_count = Math.min(sample_count +1, MAX_NUM_IMPORTANT_SAMPLES);
-    // Calculate the new health score
-    healthScore = healthScore * (1.0f*(sample_count -1) )/ sample_count + (1.0f * error)/(1.0f * sample_count) ;
-  }
 
 }
