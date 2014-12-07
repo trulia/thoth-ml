@@ -3,7 +3,7 @@ package com.trulia.thoth.pojo;
 /**
  * User: dbraga - Date: 12/5/14
  */
-public class QuerySamplingDetails2 {
+public class QuerySamplingDetails {
   private Details details;
   private Feature features;
 
@@ -27,7 +27,6 @@ public class QuerySamplingDetails2 {
     private boolean isFacet;
     private boolean isCollapsingSearch;
     private boolean isGeospatialSearch;
-//    private boolean containsOpenHomes;
     private boolean isRangeQuery;
 
     public boolean isFacet() {
@@ -54,14 +53,6 @@ public class QuerySamplingDetails2 {
       this.isGeospatialSearch = isGeospatialSearch;
     }
 
-//    public boolean isContainsOpenHomes() {
-//      return containsOpenHomes;
-//    }
-//
-//    public void setContainsOpenHomes(boolean containsOpenHomes) {
-//      this.containsOpenHomes = containsOpenHomes;
-//    }
-
     public boolean isRangeQuery() {
       return isRangeQuery;
     }
@@ -81,7 +72,6 @@ public class QuerySamplingDetails2 {
     private boolean slowpool = false;
     private String collapseField;
     private String collapseDocFl;
-//    private String ghl;
     private String facetField;
     private String facetZeros;
 
@@ -100,14 +90,6 @@ public class QuerySamplingDetails2 {
     public void setFacetZeros(String facetZeros) {
       this.facetZeros = facetZeros;
     }
-//
-//    public String getGhl() {
-//      return ghl;
-//    }
-//
-//    public void setGhl(String ghl) {
-//      this.ghl = ghl;
-//    }
 
     public String getCollapseField() {
       return collapseField;

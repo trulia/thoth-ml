@@ -1,6 +1,6 @@
 package com.trulia.thoth.quartz;
 
-import com.trulia.thoth.Converter;
+import com.trulia.thoth.trulia.TruliaConverter;
 import com.trulia.thoth.pojo.ServerDetail;
 import com.trulia.thoth.predictor.ModelHealth;
 import com.trulia.thoth.predictor.StaticModelHealth;
@@ -188,7 +188,7 @@ public class SamplerWorker implements Callable<String>{
     for (SolrDocument doc: randomSample){
       //TODO: refactor this
       updateHealthScores(doc);
-      writer.write(Converter.thothDocToTsv(doc, mapper));
+      writer.write(TruliaConverter.thothDocToTsv(doc, mapper));
     }
     closeFileWriter();
     return "done";

@@ -1,15 +1,19 @@
 package com.trulia.thoth;
 
-import com.trulia.thoth.pojo.QueryPojo;
-import com.trulia.thoth.pojo.QuerySamplingDetails;
-import com.trulia.thoth.requestdocuments.MessageRequestDocument;
-import com.trulia.thoth.requestdocuments.SolrQueryRequestDocument;
-import org.apache.solr.common.SolrDocument;
-import org.codehaus.jackson.map.ObjectMapper;
+/**
+ * User: dbraga - Date: 12/6/14
+ */
 
-import java.io.IOException;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+    import com.trulia.thoth.pojo.QueryPojo;
+    import com.trulia.thoth.pojo.QuerySamplingDetails;
+    import com.trulia.thoth.requestdocuments.MessageRequestDocument;
+    import com.trulia.thoth.requestdocuments.SolrQueryRequestDocument;
+    import org.apache.solr.common.SolrDocument;
+    import org.codehaus.jackson.map.ObjectMapper;
+
+    import java.io.IOException;
+    import java.util.regex.Matcher;
+    import java.util.regex.Pattern;
 
 /**
  * User: dbraga - Date: 11/27/14
@@ -17,11 +21,9 @@ import java.util.regex.Pattern;
 public class Converter {
   private static final String[] samplingFields = { MessageRequestDocument.HOSTNAME, MessageRequestDocument.CORENAME, MessageRequestDocument.SOURCE, SolrQueryRequestDocument.PARAMS, SolrQueryRequestDocument.QTIME, SolrQueryRequestDocument.HITS, SolrQueryRequestDocument.BITMASK};
   private static final Pattern FACET_PATTERN = Pattern.compile("facet=true");
-
   private static Pattern RANGE_QUERY_PATTERN = Pattern.compile("\\w*:\\[(.*?TO.*?)\\]");
   private static Pattern COLLAPSING_SEARCH_PATTERN = Pattern.compile("collapse.field=");
   private static Pattern GEOSPATIAL_PATTERN = Pattern.compile("!spatial");
-  private static Pattern OPEN_HOMES_PATTERN = Pattern.compile("ohDay_ms:\\[");
 
 
   /**
@@ -110,7 +112,6 @@ public class Converter {
 
     features.setFacet(checkForMatch(FACET_PATTERN, params));
     features.setCollapsingSearch(checkForMatch(COLLAPSING_SEARCH_PATTERN, params));
-    features.setContainsOpenHomes(checkForMatch(OPEN_HOMES_PATTERN, params));
     features.setGeospatialSearch(checkForMatch(GEOSPATIAL_PATTERN, params));
     features.setRangeQuery(checkForMatch(RANGE_QUERY_PATTERN, params));
 
@@ -132,7 +133,6 @@ public class Converter {
         else if ("collapse.includeCollapsedDocs.fl".equals(k)) details.setCollapseDocFl(v);
         else if ("facet.field".equals(k)) details.setFacetField(v);
         else if ("facet.zeros".equals(k)) details.setFacetZeros(v);
-        else if ("ghl".equals(k)) details.setGhl(v);
 
 
         else if ( !("cachebust".equals(k)) && !("wt".equals(k)) && !("version".equals(k)) && !("version".equals(k)) && !("fl".equals(k)) ) {

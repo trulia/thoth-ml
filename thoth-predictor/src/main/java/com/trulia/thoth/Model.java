@@ -1,5 +1,6 @@
 package com.trulia.thoth;
 
+import com.trulia.thoth.trulia.TruliaConverter;
 import hex.gbm.GBM;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.log4j.Logger;
@@ -153,7 +154,7 @@ public class Model {
 
     String line;
     while ((line=br.readLine()) != null) {
-      Double[] instance = Instance2.create(Converter.tsvToQueryPojo(line), slowQueryThreshold, false);
+      Double[] instance = Instance.create(TruliaConverter.tsvToQueryPojo(line), slowQueryThreshold, false);
       if (instance == null) continue; // invalid instance, skipping
       LOG.info("Instance " + ArrayUtils.toString(instance));
 
