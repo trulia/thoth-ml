@@ -1,4 +1,4 @@
-package com.trulia.thoth;
+package com.trulia.thoth.utils;
 
 import org.apache.commons.collections.buffer.CircularFifoBuffer;
 import org.apache.log4j.Logger;
@@ -9,9 +9,8 @@ import java.util.ArrayList;
  * User: dbraga - Date: 11/30/14
  */
 public class MergeUtils {
+
   public static final String MERGED_FILE_NAME = "merged";
-
-
   private String mergeFile;
   private String dirToMerge;
   private CircularFifoBuffer fifo;

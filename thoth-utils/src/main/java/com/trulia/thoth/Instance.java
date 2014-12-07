@@ -1,6 +1,7 @@
 package com.trulia.thoth;
 
 
+import com.trulia.thoth.classifier.Classifier;
 import com.trulia.thoth.pojo.QueryPojo;
 import com.trulia.thoth.pojo.QuerySamplingDetails;
 import org.codehaus.jackson.map.DeserializationConfig;
@@ -80,15 +81,15 @@ public class Instance {
    * @param bitmask
    */
   private static void addBitmaskBooleanFields(ArrayList<Double> instance, String bitmask) {
-    if (bitmask.length() != 4) {
+    if (bitmask.length() != Classifier.BITMASK_SIZE) {
       System.out.println("Invalid bitmask: " + bitmask);
       return;
     }
 
-    instance.add(Double.parseDouble(String.valueOf(bitmask.charAt(0))));
-    instance.add(Double.parseDouble(String.valueOf(bitmask.charAt(1))));
-    instance.add(Double.parseDouble(String.valueOf(bitmask.charAt(2))));
-    instance.add(Double.parseDouble(String.valueOf(bitmask.charAt(3))));
+    for (int bitMaskOffset = 0 ; bitMaskOffset <  Classifier.BITMASK_SIZE; bitMaskOffset ++){
+      instance.add(Double.parseDouble(String.valueOf(bitmask.charAt(bitMaskOffset))));
+    }
+
   }
 
 

@@ -1,6 +1,6 @@
 package com.trulia.thoth.quartz;
 
-import com.trulia.thoth.MergeUtils;
+import com.trulia.thoth.utils.MergeUtils;
 import com.trulia.thoth.pojo.ServerDetail;
 import com.trulia.thoth.predictor.ModelHealth;
 import com.trulia.thoth.util.ThothServers;

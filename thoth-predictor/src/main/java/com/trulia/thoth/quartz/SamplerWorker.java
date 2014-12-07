@@ -1,10 +1,10 @@
 package com.trulia.thoth.quartz;
 
+import com.trulia.thoth.Converter;
 import com.trulia.thoth.pojo.ServerDetail;
 import com.trulia.thoth.predictor.ModelHealth;
 import com.trulia.thoth.requestdocuments.MessageRequestDocument;
 import com.trulia.thoth.requestdocuments.SolrQueryRequestDocument;
-import com.trulia.thoth.trulia.TruliaConverter;
 import com.trulia.thoth.util.Utils;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
@@ -142,7 +142,7 @@ public class SamplerWorker implements Callable<String>{
     List<SolrDocument> randomSample = randomSample(sampleOfThothDocs, RANDOM_SAMPLE_COUNT);
     for (SolrDocument thothDocument: randomSample){
       verifyQualityOfPrediction(thothDocument);
-      writer.write(TruliaConverter.thothDocToTsv(thothDocument, mapper));
+      writer.write(Converter.thothDocToTsv(thothDocument, mapper));
     }
     closeFileWriter();
     return "done";
