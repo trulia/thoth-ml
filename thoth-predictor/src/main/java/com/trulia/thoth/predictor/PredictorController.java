@@ -2,7 +2,6 @@ package com.trulia.thoth.predictor;
 
 import com.trulia.thoth.Model;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -28,9 +27,6 @@ import java.io.InputStream;
   ModelHealth modelHealth;
   @Autowired
   private Model model;
-
-  @Value("${thoth.predictor.model.health.invalid.score}")
-  private String PREDICTOR_MODEL_HEALTH_INVALID_SCORE;
 
   // List of actions
   private static final String RETRIEVE_VERSION = "getCurrentModelVersion";
