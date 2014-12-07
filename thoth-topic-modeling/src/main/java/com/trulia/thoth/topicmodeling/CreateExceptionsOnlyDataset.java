@@ -22,8 +22,6 @@ public class CreateExceptionsOnlyDataset {
       String[] fields = line.split("\t");
       if(fields.length != 8) {
         System.out.println("Invalid line: " + fields.length + " fields");
-//        System.out.println(line);
-//        System.out.println();
         continue;
       }
 
@@ -33,12 +31,7 @@ public class CreateExceptionsOnlyDataset {
           bw.write(fields[i]);
           bw.newLine();
         }
-//        System.out.println("Field no " + i +": " + fields[i]);
       }
-//      System.out.println("-----------------------------------------------------");
-//      System.out.println();
-//      if(count++ > 10)
-//        break;
     }
     bw.flush();
   }

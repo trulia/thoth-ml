@@ -1,0 +1,85 @@
+<html>
+  <head>
+    <title>Topic Clouds</title> 
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+    <script src="http://d3js.org/d3.v2.min.js?2.10.0"></script>
+    <script type="text/javascript" src="d3.layout.cloud.js"></script>
+</head>
+
+<body>
+<script>
+
+
+
+
+var maxTopics = 10;
+
+// Create all the SVG containers
+for (x = 0; x < maxTopics; x++) {
+	viz = d3.select("body").append("svg")
+    .attr("width", 400)
+    .attr("height", 440)
+    .attr("id", "svg" + x);
+}
+
+for (x = 0; x < maxTopics; x++) {
+  var topicNumber = x;
+	d3.csv("topic-"+topicNumber+".csv", function(topic) {
+  
+  var sizes = [];
+  topic.forEach(function(t){
+    sizes.push(t.size);
+  });
+  var min = Math.min.apply(Math, sizes);
+  var max = Math.max.apply(Math, sizes);
+  var step = max / 5 ;
+  var scale = [min,  (max - 3 * step),(max - 2 * step), (max - step), max]
+  
+  console.log(scale);
+
+  wordScale=d3.scale.linear().domain(scale).range([10,20,40,60,80]).clamp(true);
+  wordColor=d3.scale.linear().domain([10,20,40,60,80]).range(["blue","green","orange","red","darkred"]);
+
+  // console.log(topic);
+  
+  d3.layout.cloud().size([400, 400])
+      .words(topic)
+      .rotate(function() { return ~~(Math.random() * 2) * 5; })
+      .fontSize(function(d) { return wordScale(d.size); })
+      .on("end", draw)
+      .start();
+
+  function draw(words) {
+	  
+	viz = d3.select("#svg" + topic[topicNumber].topic);
+        
+      viz.append("g")
+        .attr("transform", "translate(200,240)")
+      .selectAll("text")
+        .data(words)
+      .enter().append("text")
+        .style("font-size", function(d) { return d.size + "px"; })
+        .style("fill", function(d) { return wordColor(d.size); })
+        .style("opacity", .75)
+        .attr("text-anchor", "middle")
+        .attr("transform", function(d) {
+          return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
+        })
+        .text(function(d) { return d.text; });
+    
+    // TEXT
+		viz
+        .append("text")
+        .data([topic[topicNumber]])
+        .style("font-size", 20)
+        .style("font-weight", 900)
+        .attr("x", 20)
+        .attr("y", 20)
+        .text(function(d) { return "TOPIC " + d.topic; })
+
+  }
+
+
+})
+}
+</script>
