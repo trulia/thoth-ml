@@ -4,6 +4,7 @@ package com.trulia.thoth;
  * User: dbraga - Date: 12/6/14
  */
 
+import com.trulia.thoth.classifier.Classifier;
 import com.trulia.thoth.pojo.QueryPojo;
 import com.trulia.thoth.requestdocuments.MessageRequestDocument;
 import com.trulia.thoth.requestdocuments.SolrQueryRequestDocument;
@@ -33,6 +34,23 @@ public class Converter {
     if (!fields[4].isEmpty()) queryPojo.setQtime(fields[4]);
     if (!fields[5].isEmpty()) queryPojo.setHits(fields[5]);
     queryPojo.setBitmask(fields[6]);
+    return queryPojo;
+  }
+
+
+   /**
+   * Given a string representing a solr query, it will create a query pojo
+   * @param solrQuery string representation of a solr query
+   * @param hits number of hits
+   * @param qtime qtime
+   * @return query pojo
+   */
+  public static QueryPojo solrQueryToQueryPojo(String solrQuery, Integer hits, Integer qtime, ObjectMapper mapper) throws IOException {
+    QueryPojo queryPojo = new QueryPojo();
+    queryPojo.setParams(DocUtils.extractDetailsFromParams(solrQuery, mapper));
+    queryPojo.setBitmask(new Classifier(solrQuery).createBitMask());
+    if (qtime != null) queryPojo.setQtime(String.valueOf(qtime));
+    if (hits != null ) queryPojo.setHits(String.valueOf(hits));
     return queryPojo;
   }
 
