@@ -1,4 +1,6 @@
 // Word cloud layout by Jason Davies, http://www.jasondavies.com/word-cloud/
+// Original code from Elijah Meeks https://gist.github.com/emeeks
+// Re adapted by Damiano Braga https://github.com/dbraga
 // Algorithm due to Jonathan Feinberg, http://static.mrfeinberg.com/bv_ch03.pdf
 (function(exports) {
   function cloud() {
