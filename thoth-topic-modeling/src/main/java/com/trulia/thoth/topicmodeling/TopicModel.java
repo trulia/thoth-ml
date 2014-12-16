@@ -114,9 +114,9 @@ public class TopicModel {
 
   public static void main(String[] args) throws Exception {
     properties = Util.fetchPropertiesFromPropertiesFile();
-    int numTopics = 10;
-    int numIterations = 100;
-    int numKeywordsToOutput = 50;
+    int numTopics = Integer.parseInt(properties.getProperty("directory.topicModeling.numTopics"));
+    int numIterations = Integer.parseInt(properties.getProperty("directory.topicModeling.numIterations"));
+    int numKeywordsToOutput = Integer.parseInt(properties.getProperty("directory.topicModeling.numKeywordsToOutput"));
     new TopicModel().testTopicModeling(numTopics, numIterations, numKeywordsToOutput);
   }
 
