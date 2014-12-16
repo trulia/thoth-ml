@@ -21,7 +21,7 @@ Query Pattern Recognition
 ---------------------------
 <img src="img/topicmodeling.jpg?raw=true">
 <br>
-For instructions on how to use this module, or a list of the other modules [See the Wiki](https://github.com/trulia/thoth/wiki)
+For instructions on how to use this module, or a list of the other modules [See the Wiki](https://github.com/trulia/thoth-ml/wiki)
 
 Contributing
 =======================
